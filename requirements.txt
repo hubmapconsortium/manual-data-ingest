@@ -1,0 +1,17 @@
+flask_cors==3.0.7
+properties==0.6.1
+property==2.2
+mysql-connector-python==8.0.16
+flask==1.0.2
+globus-sdk==1.7.1
+urllib3==1.24.2
+neo4j==1.7.2
+prov==1.5.3
+pytz==2019.1
+jsonschema==3.2.0
+requests==2.22.0
+jsonref-ap==0.3.dev0
+PyYAML==5.3.1
+file:../../commons#egg=hubmap-commons --no-index
+pandas==1.0.3
+xlrd==1.2.0

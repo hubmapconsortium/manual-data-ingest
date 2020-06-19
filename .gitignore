@@ -1,0 +1,11 @@
+data_mung.properties
+data_ingest.properties
+*.csv
+*.tsv
+*~
+
+# Ignore __pycache__ directories in any path
+**/__pycache__
+
+# Ignore log but keep the log directory
+**/*.log
