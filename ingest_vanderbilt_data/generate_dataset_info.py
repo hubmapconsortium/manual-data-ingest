@@ -3,7 +3,7 @@ import requests
 from hubmap_commons import file_helper
 from hubmap_commons import string_helper
 from properties.p import Property
-#from ingest_vanderbilt_data.meta_reader import VandCSVReader
+from ingest_vanderbilt_data.meta_reader import VandCSVReader
 
 
 import re

@@ -1,0 +1,29 @@
+#HuBMAP Globus application id and secret
+globus.app.client.id=
+globus.app.client.secret=
+
+#Globus Nexus Auth Token
+nexus.token=
+
+#urls to HuBMAP services
+entity.api.url=https://entity-api.dev.hubmapconsortium.org
+uuid.api.url=https://uuid-api.dev.hubmapconsortium.org
+ingest.api.url=https://ingest-api.dev.hubmapconsortium.org
+
+
+#input file for samle data import, can be provided here or on command line
+sample.metadata.tsv.file=samples-test.tsv
+
+#path to the data for the Vanderbilt ingest script
+root.path.to.data=/Users/shirey/projects/hubmap/vanderbilt-data/
+#tsv with information about vanderbilt datasets, initially created by ingest_vanderbilt_data/generate_dataset_info.py,
+#used by ingest_vanderbilt_data/create_datasets.py
+vand.dataset.info.tsv=/Users/shirey/projects/hubmap/vanderbilt-data/vand-data-test-datasets.1.tsv
+
+#id of the HuBMAP-Testing group on Globus
+test.group.id=5bd084c8-edc2-11e8-802f-0e368f3075e8
+
+#these are url/directories to HuBMAP PROD Globus Landing Zone
+globus.app.base.url=https://app.globus.org/file-manager?origin_id=28bbb03c-a87d-4dd7-a661-7ea2fb6ea631&origin_path=
+globus.single.file.base.url=https://5d482b.8540.dn.glob.us/
+globus.system.dir=/hive/hubmap/lz/

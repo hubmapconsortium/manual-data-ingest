@@ -1,4 +1,3 @@
-data_mung.properties
 data_ingest.properties
 *.csv
 *.tsv

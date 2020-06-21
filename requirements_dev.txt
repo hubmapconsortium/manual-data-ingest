@@ -12,6 +12,6 @@ jsonschema==3.2.0
 requests==2.22.0
 jsonref-ap==0.3.dev0
 PyYAML==5.3.1
-git+git://github.com/hubmapconsortium/commons.git@master#egg=hubmap-commons
+file:../commons#egg=hubmap-commons --no-index
 pandas==1.0.3
 xlrd==1.2.0
