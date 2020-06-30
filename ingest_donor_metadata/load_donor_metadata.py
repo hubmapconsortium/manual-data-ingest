@@ -1,4 +1,6 @@
 import csv
+import requests
+
 from hubmap_commons.entity import Entity
 from hubmap_commons.test_helper import load_config
 from hubmap_commons.hubmap_const import HubmapConst
@@ -53,6 +55,22 @@ def write_data_to_neo4j(conf_data, token, data_dict):
             tx.rollback()
         tx.commit()
 
+def call_index_process(conf_data, token, data_dict):
+    #reindex this node in elasticsearch
+    for dict_item in data_dict:
+        current_uuid = []
+        try:
+            try: 
+                current_uuid = Entity.get_uuid_list(conf_data['UUID_WEBSERVICE_URL'], token, [dict_item])
+            except ValueError as ve:
+                print("Unable to resolve UUID for: " + str(dict_item))
+                continue
+            rspn = requests.put(conf_data['SEARCH_WEBSERVICE_URL'] + "/reindex/" + current_uuid[0], headers={'Authorization': 'Bearer ' + str(token)})
+        except:
+            print("Error happened when calling reindex web service")
+
+
+
 if __name__ == "__main__":
     print("Start")
     root_path = ''
@@ -62,6 +80,7 @@ if __name__ == "__main__":
     token = ''
     conf_data['UUID_WEBSERVICE_URL'] = '' 
     write_data_to_neo4j(conf_data, token, data_dict)
+    call_index_process(conf_data, token, data_dict)
     print("Done")
                 
     
