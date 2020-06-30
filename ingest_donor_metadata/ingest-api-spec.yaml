@@ -1,0 +1,419 @@
+openapi: 3.0.0
+info:
+  description: |
+    This is the HuBMAP DataIngest API specification
+  version: "1.0.0-oas3-test"
+  title: HuBMAP DataIngest APIs
+  termsOfService: "http://hubmapconsortium.org"
+  contact:
+    email: apiteam@hubmap.org
+  license:
+    name: Apache 2.0
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+tags:
+  - name: dataset
+    description: Operations pertaining to datasets
+    externalDocs:
+      description: Find out more about our dataset
+      url: "http://hubmapconsortium.org"
+  - name: collection
+    description: Operations for a collection
+    externalDocs:
+      description: Find out more about our entities
+      url: "http://hubmapconsortium.org"
+  - name: specimen
+    description: Operations for specimens
+    externalDocs:
+      description: Find out more about our entities
+      url: "http://hubmapconsortium.org"
+paths:
+  /datasets:
+    get:
+      tags:
+        - dataset
+      summary: Get a list of HuBMAP datasets filtered by optional parameters.  If no parameters are set, the call returns a list of datasets filtered by the user's token permissions
+      operationId: searchDataset
+      parameters:
+        - name: group
+          in: query
+          description: 'The name of a HuBMAP group (All Groups, IEC Testing Group, Stanford TMC, Vanderbilt TMC, University of Florida TMC, California Institute of Technology TMC, University of California San Diego TMC)'
+          required: false
+          schema:
+            type: string
+        - name: keywords
+          in: query
+          description: 'One or more keywords to use for searching the free text associated with the datasets.'
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  datasets:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Dataset'
+        "400":
+          description: The user sent a bad parameter (e.g. a nonexistent group name) or there was a system error
+        "401":
+          description: User's token is not valid
+    post:
+      tags:
+        - dataset
+      summary: Creates a new HuBMAP dataset.
+      operationId: addDataset
+      responses:
+        "201":
+          description: successful created
+        "400":
+          description: missing data that is required to create a new dataset or a system error occurred
+        "401":
+          description: User is not authorized to create datasets or user's group information cannot be determined
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Dataset"
+          application/xml:
+            schema:
+              $ref: "#/components/schemas/Dataset"
+        description: Dataset object that needs to be created
+        required: true
+  "/datasets/{identifier}":
+    get:
+      tags:
+        - dataset
+      summary: Get a single HuBMAP dataset by id
+      operationId: getDataset
+      parameters:
+        - name: identifier
+          in: path
+          description: The unique identifier of dataset.  this identifier can be a UUID, Display DOI (HBM365.KSBD.575) or DOI (365KSBD575).
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  dataset:
+                    $ref: "#/components/schemas/Dataset"
+        "400":
+          description: Missing dataset identifier or identifier cannot be found
+        "401":
+          description: User's token is not valid
+    put:
+      tags:
+        - dataset
+      summary: Modify a single HuBMAP dataset by id
+      operationId: putDataset
+      parameters:
+        - name: identifier
+          in: path
+          description: The unique identifier of dataset.  this identifier can be a UUID, Display DOI (HBM365.KSBD.575) or DOI (365KSBD575).
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: successful operation
+        "400":
+          description: Missing dataset Identifier or the data for the update
+        "401":
+          description: User is not authorized to modify datasets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Dataset"
+        description: Updated dataset object
+        required: true
+  /collections:
+    get:
+      tags:
+        - collection
+      summary: Get a list of dataset collections
+      operationId: getCollections
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  collections:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Collection'
+        "400":
+          description: There was a system error
+        "401":
+          description: User's token is not valid
+    put:
+      tags:
+        - collection
+      summary: Create a dataset collection
+      operationId: addCollection
+      responses:
+        "201":
+          description: successful operation
+        "400":
+          description: There was a system error or an error in the data submitted
+        "401":
+          description: User's token is not valid
+  "/collections/{identifier}":
+    get:
+      tags:
+        - collection
+      summary: Get a single collection by uuid
+      operationId: getCollection
+      parameters:
+        - name: identifier
+          in: path
+          description: The unique identifier of collection.  This must be a uuid.
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  collection:
+                    $ref: "#/components/schemas/Collection"
+        "400":
+          description: Missing collection identifier or identifier cannot be found or a system error
+        "401":
+          description: User's token is not valid
+  /specimens:
+    put:
+      tags:
+        - specimen
+      summary: Modify a specimen
+      operationId: editSpecimen
+      responses:
+        "201":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  uuid:
+                    type: string
+                    example: 6dba271c5c0bbd09f8b73784c2c40f95
+        "400":
+          description: There was a system error or an error in the data submitted
+        "401":
+          description: User's token is not valid
+    post:
+      tags:
+        - specimen
+      summary: Creates a new HuBMAP specimen.
+      operationId: addSpecimen
+      responses:
+        "201":
+          description: successful created
+          content:
+            application/json:
+              schema:
+                properties:
+                  new_samples:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Specimen'
+        "400":
+          description: a system error occurred
+        "401":
+          description: User is not authorized to create specimens or user's group information cannot be determined
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Specimen"
+          application/xml:
+            schema:
+              $ref: "#/components/schemas/Specimen"
+        description: Dataset object that needs to be created
+        required: true  
+  "/specimens/{identifier}":
+    get:
+      tags:
+        - specimen
+      summary: Get a single specimen by identifier
+      operationId: getSpecimen
+      parameters:
+        - name: identifier
+          in: path
+          description: The unique identifier of specimen.  this identifier can be a UUID, Display DOI (HBM365.KSBD.575) or DOI (365KSBD575).
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  specimen:
+                    $ref: "#/components/schemas/Specimen"
+        "400":
+          description: Missing specimen identifier or identifier cannot be found or a system error
+        "401":
+          description: User's token is not valid
+  "/specimens/search":
+    get:
+      tags:
+        - specimen
+      summary: Get a list of specimens
+      operationId: getSpecimens
+      parameters:
+        - name: specimen_type
+          in: query
+          description: The unique identifier of specimen.  This identifier can be a UUID, Display DOI (HBM365.KSBD.575) or DOI (365KSBD575).
+          required: false
+          schema:
+            type: string
+        - name: search_term
+          in: query
+          description: The unique identifier of specimen.  this identifier can be a UUID, Display DOI (HBM365.KSBD.575) or DOI (365KSBD575).
+          required: false
+          schema:
+            type: string
+        - name: include_datasets
+          in: query
+          description: The unique identifier of specimen.  this identifier can be a UUID, Display DOI (HBM365.KSBD.575) or DOI (365KSBD575).
+          required: false
+          schema:
+            type: string
+        - name: group
+          in: query
+          description: 'The name of a HuBMAP group (All Groups, IEC Testing Group, Stanford TMC, Vanderbilt TMC, University of Florida TMC, California Institute of Technology TMC, University of California San Diego TMC)'
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                properties:
+                  specimens:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Specimen'
+        "400":
+          description: There was a system error
+        "401":
+          description: User's token is not valid
+
+
+servers:
+  - url: "https://uuid.hubmapconsortium.org/dataingest"
+  - url: "http://uuid.hubmapconsortium.org/dataingest"
+components:
+  securitySchemes:
+    globus_auth:
+      type: oauth2
+      flows:
+        implicit:
+          authorizationUrl: "https://auth.globus.org/v2/oauth2/authorize"
+          scopes:
+            "write:dataset": modify datasets
+            "read:dataset": read datasets
+    api_key:
+      type: apiKey
+      name: api_key
+      in: header
+  schemas:
+    Dataset:
+      type: object
+      required:
+        - uuid
+        - doi
+        - display_doi
+        - status
+        - entitytype
+      properties:
+        uuid:
+          type: string
+          example: 6dba271c5c0bbd09f8b73784c2c40f95
+        doi:
+          type: string
+          example: 569SKTF599
+        display_doi:
+          type: string
+          example: HBM569.SKTF.599
+        status:
+          type: string
+        entitytype:
+          type: string
+          example: Dataset
+        collection:
+          $ref: "#/components/schemas/Collection"
+        phi:
+          type: boolean
+          example: false
+      xml:
+        name: DataSet
+    Collection:
+      type: object
+      required:
+        - uuid
+        - doi
+        - display_doi
+        - label
+        - entitytype
+      properties:
+        uuid:
+          type: string
+          example: a23526eaa92beef971cd013b5c4a1ce5
+        doi:
+          type: string
+          example: 527RQJT662
+        display_doi:
+          type: string
+          example: HBM527.RQJT.662
+        label:
+          type: string
+          example: Test Collection 1
+        entitytype:
+          type: string
+          example: Collection
+        description:
+          type: string
+          example: THis is a description of Collection 1
+      xml:
+        name: Collection
+    Specimen:
+      type: object
+      required:
+        - uuid
+        - doi
+        - display_doi
+        - entitytype
+      properties:
+        uuid:
+          type: string
+          example: a23526eaa92beef971cd013b5c4a1ce5
+        doi:
+          type: string
+          example: 527RQJT662
+        display_doi:
+          type: string
+          example: HBM527.RQJT.662
+        entitytype:
+          type: string
+          example: Sample, Donor
+      xml:
+        name: Specimen
