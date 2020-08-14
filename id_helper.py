@@ -48,4 +48,15 @@ class UUIDHelper:
         else:
             return None
         
+    def new_uuid(self, entity_type, generate_doi = False):
+        url = file_helper.ensureTrailingSlash(self.uuid_url) + "hmuuid"
+        headers = {'Authorization': 'Bearer ' + self.token, 'Content-Type': 'application/json'}
+        gen_doi = "false"
+        if generate_doi: gen_doi = "true"
+        resp = requests.post(url, json = {'entityType': entity_type, 'generateDOI': gen_doi}, headers=headers)
+        status_code = resp.status_code
+        if status_code < 200 or status_code >= 300:
+            raise ErrorMessage("Unable to generate UUID " + str(resp.status_code) + ":" + str(resp.text))
+        vals = resp.json()
+        return vals[0]       
         

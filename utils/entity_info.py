@@ -180,3 +180,37 @@ class EntityInfo:
             return globus_path
         else:
             return None
+        
+    def _direct_ancestor_display_id(self, id):
+        idx = id.rfind("-")
+        if idx == -1:
+            return None
+        else:
+            return id[:idx]
+        
+    #prints information about sample up the hierarchy from a given sample id
+    #takes a list of display ids
+    def print_sample_info(self, sample_ids):
+        url_start = self.entity_api_url + "entities/"
+        headers = {'Authorization': 'Bearer ' + self.nexus_token}
+        samples = []
+        for sample_id in sample_ids:
+            samples.append(sample_id)
+            next_sample = self._direct_ancestor_display_id(sample_id)
+            while next_sample is not None:
+                next_sample = self._direct_ancestor_display_id(next_sample)
+            samples.reverse()
+            url = url_start + sample_id
+            resp = requests.get(url, headers=headers)
+            status_code = resp.status_code
+            if status_code < 200 or status_code >= 300:
+                resp.raise_for_status()
+
+            entities = resp.json()
+            for ent in entities:
+                self._print_sample_info_line(ent)
+                
+                
+    def _print_sample_info_line(self, entity):
+        print(entity)
+                
