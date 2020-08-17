@@ -169,7 +169,7 @@ class DatasetWorker:
                     uuids_for_public.append(uuid)
             elif entity_type == 'Dataset':
                 if not status == 'Published':
-                    return(dataset_uuid + ": Has an ancestor dataset that is not public will not Publish, ancestor dataset is: " + uuid)
+                    return(dataset_uuid + ": Has an ancestor dataset that has not been Published. Will not Publish, ancestor dataset is: " + uuid)
         
         if donor_uuid is None:
             return(dataset_uuid + ": No donor found for dataset, will not Publish")
