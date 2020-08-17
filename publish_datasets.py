@@ -229,7 +229,7 @@ class DatasetWorker:
         if not TRIAL_RUN: shutil.move(from_path, to_path)
         self.recording_logger.info("^^^^\t" + uuid + "\tMOVE dataset\tmv " + from_path + " " + to_path)
         if self.setfacl_available:
-            self.recording_logger.info("^^^^\t" + uuid + "\tREINDEX\tsetacl -R --set=" + self.public_facls + " " + to_path)
+            self.recording_logger.info("^^^^\t" + uuid + "\tSET ACLs\tsetfacl -R --set=" + self.public_facls + " " + to_path)
             if not TRIAL_RUN: subprocess.Popen(['setfacl','-R', '--set=' + self.public_facls, to_path ])
         
         #look for a README in the old globus share and replace with a readme that points to
