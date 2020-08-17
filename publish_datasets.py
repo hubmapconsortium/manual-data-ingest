@@ -21,6 +21,7 @@ SINGLE_DATASET_QUERY = "match(e:Entity {uuid: {uuid}})-[:HAS_METADATA]-(m:Metada
 ALL_ANCESTORS_QUERY = "MATCH (ds_metadata:Metadata)<-[:HAS_METADATA]-(dataset {uuid: {uuid}})<-[:ACTIVITY_OUTPUT]-(e1)<-[r:ACTIVITY_INPUT|:ACTIVITY_OUTPUT*]-(all_ancestors:Entity)-[:HAS_METADATA]->(all_ancestors_metadata) RETURN distinct all_ancestors.uuid as uuid, all_ancestors.entitytype as entity_type, all_ancestors_metadata.data_types as data_types, all_ancestors_metadata.data_access_level as data_access_level, all_ancestors_metadata.status as status"
 PUBLIC_FACLS = 'u::rwx,g::r-x,o::r-x,m::rwx,u:{hive_user}:rwx,u:{globus_user}:rwx,d:user::rwx,d:user:{hive_user}:rwx,d:user:{globus_user}:rwx,d:group::r-x,d:mask::rwx,d:other:r-x'
 TRIAL_RUN = True
+SET_ACLS = False
 
 class DatasetWorker:
     
@@ -122,12 +123,13 @@ class DatasetWorker:
                 tl = id_line.strip()
                 if not tl.startswith('#'):
                     self.ds_ids.append(tl)
-                    
+        
+        
+        self.setfacls = SET_ACLS
         #check to see if the setfacl command is available
         if shutil.which('setfacl') is None:
-            self.setfacl_available = False
-        else:
-            self.setfacl_available = True
+            self.setfacls = False
+
         
     def publish_all(self):
         for id in self.ds_ids:
@@ -137,8 +139,8 @@ class DatasetWorker:
                 print(msg)
                 self.recording_logger.info(id + "\t????\tNOT PUBLISHED\t" + msg)
                     
-        if not self.setfacl_available:
-            msg = "The setfacl command isn't available.  Make sure to set the file system level protections correctly on any moved datasets with the command\nsetfacl -R --set=" + self.public_facls
+        if not self.setfacls:
+            msg = "The setfacl command isn't available or turned off.  Make sure to set the file system level protections correctly on any moved datasets with the command\nsetfacl -R --set=" + self.public_facls
             self.error_logger.warning(msg)
             self.recording_logger.warning(id + "\t????\tSETFACL WARNING\tsetfacl wasn't available")
             print(msg)
@@ -228,7 +230,7 @@ class DatasetWorker:
         to_path = self.public_dir + uuid
         if not TRIAL_RUN: shutil.move(from_path, to_path)
         self.recording_logger.info("^^^^\t" + uuid + "\tMOVE dataset\tmv " + from_path + " " + to_path)
-        if self.setfacl_available:
+        if self.setfacls:
             self.recording_logger.info("^^^^\t" + uuid + "\tSET ACLs\tsetfacl -R --set=" + self.public_facls + " " + to_path)
             if not TRIAL_RUN: subprocess.Popen(['setfacl','-R', '--set=' + self.public_facls, to_path ])
         
