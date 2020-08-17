@@ -73,12 +73,11 @@ def call_index_process(conf_data, token, data_dict):
 
 if __name__ == "__main__":
     print("Start")
-    root_path = ''
+    root_path = '/home/chb69/git/ingest-ui/src/ingest-api/instance'
     filename = 'app.cfg'
     conf_data = load_config(root_path, filename)
-    data_dict = load_data_dict_from_csv('Sample donor metadata - Sheet1.csv')
-    token = ''
-    conf_data['UUID_WEBSERVICE_URL'] = '' 
+    data_dict = load_data_dict_from_csv('/home/chb69/Desktop/Sample_donor_metadata_V2.csv')
+    token = 'AgeQQnVqGnJKOWoGkevKamVnabnEl6o1DN0aEzGGEb1j6by3znTVCYjv1EV43xE5ooY5nxV9yo5vrjIK4Om9nulB42'
     write_data_to_neo4j(conf_data, token, data_dict)
     call_index_process(conf_data, token, data_dict)
     print("Done")
