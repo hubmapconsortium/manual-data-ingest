@@ -18,7 +18,7 @@ from id_helper import UUIDHelper
 import re
 
 SINGLE_DATASET_QUERY = "match(e:Entity {uuid: {uuid}})-[:HAS_METADATA]-(m:Metadata) return e.uuid as uuid, e.entitytype as entitytype, m.status as status, m.data_access_level as data_access_level, m.provenance_group_uuid as group_uuid"
-ALL_ANCESTORS_QUERY = "MATCH (ds_metadata:Metadata)<-[:HAS_METADATA]-(dataset {uuid: {uuid}})<-[:ACTIVITY_OUTPUT]-(e1)<-[r:ACTIVITY_INPUT|:ACTIVITY_OUTPUT*]-(all_ancestors:Entity)-[:HAS_METADATA]->(all_ancestors_metadata) RETURN all_ancestors.uuid as uuid, all_ancestors.entitytype as entity_type, all_ancestors_metadata.data_types as data_types, all_ancestors_metadata.data_access_level as data_access_level, all_ancestors_metadata.status as status"
+ALL_ANCESTORS_QUERY = "MATCH (ds_metadata:Metadata)<-[:HAS_METADATA]-(dataset {uuid: {uuid}})<-[:ACTIVITY_OUTPUT]-(e1)<-[r:ACTIVITY_INPUT|:ACTIVITY_OUTPUT*]-(all_ancestors:Entity)-[:HAS_METADATA]->(all_ancestors_metadata) RETURN distinct all_ancestors.uuid as uuid, all_ancestors.entitytype as entity_type, all_ancestors_metadata.data_types as data_types, all_ancestors_metadata.data_access_level as data_access_level, all_ancestors_metadata.status as status"
 PUBLIC_FACLS = 'u::rwx,g::r-x,o::r-x,m::rwx,u:{hive_user}:rwx,u:{globus_user}:rwx,d:user::rwx,d:user:{hive_user}:rwx,d:user:{globus_user}:rwx,d:group::r-x,d:mask::rwx,d:other:r-x'
 TRIAL_RUN = True
 
