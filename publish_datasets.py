@@ -18,9 +18,13 @@ from id_helper import UUIDHelper
 import re
 
 SINGLE_DATASET_QUERY = "match(e:Entity {uuid: {uuid}})-[:HAS_METADATA]-(m:Metadata) return e.uuid as uuid, e.entitytype as entitytype, m.status as status, m.data_access_level as data_access_level, m.provenance_group_uuid as group_uuid"
-ALL_ANCESTORS_QUERY = "MATCH (ds_metadata:Metadata)<-[:HAS_METADATA]-(dataset {uuid: {uuid}})<-[:ACTIVITY_OUTPUT]-(e1)<-[r:ACTIVITY_INPUT|:ACTIVITY_OUTPUT*]-(all_ancestors:Entity)-[:HAS_METADATA]->(all_ancestors_metadata) RETURN distinct all_ancestors.uuid as uuid, all_ancestors.entitytype as entity_type, all_ancestors_metadata.data_types as data_types, all_ancestors_metadata.data_access_level as data_access_level, all_ancestors_metadata.status as status"
+ALL_ANCESTORS_QUERY = "MATCH (ds_metadata:Metadata)<-[:HAS_METADATA]-(dataset {uuid: {uuid}})<-[:ACTIVITY_OUTPUT]-(e1)<-[r:ACTIVITY_INPUT|:ACTIVITY_OUTPUT*]-(all_ancestors:Entity)-[:HAS_METADATA]->(all_ancestors_metadata) RETURN distinct all_ancestors.uuid as uuid, all_ancestors.entitytype as entity_type, all_ancestors_metadata.data_types as data_types, all_ancestors_metadata.data_access_level as data_access_level, all_ancestors_metadata.status as status, all_ancestors_metadata.uuid as meta_uuid"
+COUNT_SAMPLES_ATTACHED_TO_META = "match (m:Metadata {uuid:{meta_uuid}})<-[:HAS_METADATA]-(s:Entity {entitytype: 'Sample'}) return count(s) as count"
+CLONE_META_NODE_ENTITY = "match(e:Entity {uuid: {ent_uuid}})-[:HAS_METADATA]-(met:Metadata) with met as oldm create (copy: Metadata) set copy = oldm with copy as nxt set nxt.uuid = {new_meta_uuid}"
+UNLINK_META_NODE_ENTITY = "match (m:Metadata)-[lnk:HAS_METADATA]-(e:Entity {uuid: {ent_uuid}}) delete lnk"
+LINK_META_NODE_ENTITY = "MATCH (e:Entity {uuid: {ent_uuid}}),(m:Metadata {uuid: {meta_uuid}}) CREATE (e)-[lnk:HAS_METADATA]->(m) RETURN type(lnk)"
 PUBLIC_FACLS = 'u::rwx,g::r-x,o::r-x,m::rwx,u:{hive_user}:rwx,u:{globus_user}:rwx,d:user::rwx,d:user:{hive_user}:rwx,d:user:{globus_user}:rwx,d:group::r-x,d:mask::rwx,d:other:r-x'
-TRIAL_RUN = True
+TRIAL_RUN = False
 SET_ACLS = False
 
 class DatasetWorker:
@@ -157,14 +161,30 @@ class DatasetWorker:
         #grab the id of the donor ancestor to use for reindexing
         rval = self.graph.run(ALL_ANCESTORS_QUERY, uuid=dataset_uuid).data()
         uuids_for_public = []
+        samples_to_clone_metadata = {}
         donor_uuid = None
         for node in rval:
             uuid = node['uuid']
+            meta_uuid = node['meta_uuid']
             entity_type = node['entity_type']
             data_access_level = node['data_access_level']
             status = node['status']
-            if entity_type == 'Sample' and not data_access_level == 'public':
-                uuids_for_public.append(uuid)
+            if entity_type == 'Sample':
+                #check to see if this sample is connected to other samples via a common
+                #metadata node, if so add it to a list to break up later
+                if not uuid in samples_to_clone_metadata:
+                    sample_count = self._count_samples_on_metadata_node(meta_uuid)
+                    if sample_count is None:
+                        return(dataset_uuid + ": Unable to obtain the count of samples attached to the same metadata node for sample with id: " + uuid + " metadata uuid: " + meta_uuid)
+                    if sample_count > 1:
+                        print("Cloning " + dataset_uuid + ":" + uuid)
+                        samples_to_clone_metadata[uuid] = meta_uuid
+                    else:
+                        print("Will not clone " + dataset_uuid + ":" + uuid)
+                    
+                #if this sample is already set to public, no need to set again
+                if not data_access_level == 'public':
+                    uuids_for_public.append(uuid)
             elif entity_type == 'Donor':
                 donor_uuid = uuid
                 if not data_access_level == 'public':
@@ -177,7 +197,6 @@ class DatasetWorker:
             return(dataset_uuid + ": No donor found for dataset, will not Publish")
         
         #get info for the dataset to be published
-
         rval = self.graph.run(SINGLE_DATASET_QUERY, uuid=dataset_uuid).data()
         dataset_status = rval[0]['status']
         dataset_entitytype = rval[0]['entitytype']
@@ -194,6 +213,11 @@ class DatasetWorker:
             if not msg is None:
                 return msg
             uuids_for_public.append(dataset_uuid)
+        
+        #split samples from metadata if needed
+        for sample_uuid in samples_to_clone_metadata.keys():
+            meta_uuid = samples_to_clone_metadata[sample_uuid]
+            self._clone_and_reattach_meta_node(dataset_id, dataset_uuid, sample_uuid, meta_uuid)
         
         #set dataset status to published and set the last modified user info and user who published
         update_q = "match (e:Entity {uuid:'" + dataset_uuid + "'})-[:HAS_METADATA]->(m:Metadata) set m.status = 'Published', m.provenance_last_updated_user_sub = '" + self.user_sub + "', m.provenance_last_updated_user_email = '" + self.user_email + "', m.provenance_last_updated_user_displayname = '" + self.user_full_name + "', m.provenance_modified_timestamp = TIMESTAMP(), m.published_timestamp = TIMESTAMP(), m.published_user_email = '" + self.user_email + "', m.published_user_sub = '" + self.user_sub + "', m.published_user_displayname = '" + self.user_full_name + "'"
@@ -222,6 +246,20 @@ class DatasetWorker:
 
         return None
         
+    def _count_samples_on_metadata_node(self, meta_uuid):
+        #print(COUNT_SAMPLES_ATTACHED_TO_META.format(meta_uuid=meta_uuid))
+        rval = self.graph.run(COUNT_SAMPLES_ATTACHED_TO_META, meta_uuid = meta_uuid).data()
+        return rval[0]['count']
+    
+    def _clone_and_reattach_meta_node(self, dataset_id, dataset_uuid, sample_uuid, meta_uuid):
+        self.recording_logger.info(dataset_id + "\t" + dataset_uuid + "\tCLONE and REATTACH METADATA\tsample_uuid" + sample_uuid + " old_meta_uuid:" + meta_uuid)
+        if not TRIAL_RUN:
+            new_meta_uuid = self.uuid_helper.new_uuid("METADATA")['uuid']
+            self.graph.run(CLONE_META_NODE_ENTITY, ent_uuid = sample_uuid, new_meta_uuid = new_meta_uuid)
+            self.graph.run(UNLINK_META_NODE_ENTITY, ent_uuid = sample_uuid)
+            self.graph.run(LINK_META_NODE_ENTITY, ent_uuid = sample_uuid, meta_uuid = new_meta_uuid)
+        
+            
     def _move_dataset_files_to_public(self, uuid, group_uuid):
         group_name = self.groupsByUUID[group_uuid]
         from_path = self.consortium_dir + group_name + uuid
