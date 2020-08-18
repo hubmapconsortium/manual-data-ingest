@@ -15,3 +15,4 @@ PyYAML==5.3.1
 file:../commons#egg=hubmap-commons --no-index
 pandas==1.0.3
 xlrd==1.2.0
+py2neo==4.3.0
