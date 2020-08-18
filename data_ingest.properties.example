@@ -1,3 +1,6 @@
+#needed by publish_datasets.sh, contains list of ids to publish
+dataset.uuid.file=/Users/shirey/hive-test-data/hubmap-local/test-consortium-datasets.txt
+
 #HuBMAP Globus application id and secret
 globus.app.client.id=
 globus.app.client.secret=
@@ -9,6 +12,13 @@ nexus.token=
 entity.api.url=https://entity-api.dev.hubmapconsortium.org
 uuid.api.url=https://uuid-api.dev.hubmapconsortium.org
 ingest.api.url=https://ingest-api.dev.hubmapconsortium.org
+search.api.url=https://search-api.dev.hubmapconsortium.org
+
+consortium.dataset.dir=/hive/hubmap-dev/data/consortium
+public.dataset.dir=/hive/hubmap-dev/data/public
+old.lz.dataset.dir=/hive/hubmap-dev/lz
+hive.username=hive
+globus.username=shirey
 
 
 #input file for samle data import, can be provided here or on command line

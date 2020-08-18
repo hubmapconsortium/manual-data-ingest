@@ -50,7 +50,7 @@ class SampleIngest:
         self.logger.addHandler(logFH)
         self.dataset_info = None
         self.dataset_info_tsv_path = None
-        self.props = IngestProps(property_file_name, required_props = ['entity.api.url', 'nexus.token', 'globus.app.client.id', 'globus.app.client.secret'])
+        self.props = IngestProps(property_file_name, required_props = ['entity.api.url', 'nexus.token', 'globus.app.client.id', 'globus.app.client.secret', 'uuid.api.url'])
         self.entity_api_url = self.props.get('entity.api.url')
         self.token = self.props.get('nexus.token')
         if len(sys.argv) >= 2:
@@ -112,14 +112,14 @@ class SampleIngest:
         
         header = {'Authorization': 'Bearer ' + self.token, 'Content-Type': 'application/json'}
         url = file_helper.ensureTrailingSlashURL(self.entity_api_url) + "samples/" + uuid
-        resp = requests.put(url, headers=header, data=json.dumps(update_recd), verify=False)
+        resp = requests.put(url, headers=header, data=json.dumps(update_recd))
         status_code = resp.status_code
         if status_code != 200:
-            msg = "unable to update metadata on Sample info for id: " + sample_id + " row  number " + str(row_num)
+            msg = "unable to update metadata on Sample info for id: " + sample_id + " row number " + str(row_num) + ".  "
             print(msg + " Check the log file " + self.log_filename)
             self.logger.error(msg)
             self.logger.error("Web service return code " + str(status_code))
-            self.logger.error("Web service response ") + resp.text
+            self.logger.error("Web service response " + resp.text)
             return False
         return True
 
