@@ -180,10 +180,7 @@ class DatasetWorker:
                     if sample_count is None:
                         return(dataset_uuid + ": Unable to obtain the count of samples attached to the same metadata node for sample with id: " + uuid + " metadata uuid: " + meta_uuid)
                     if sample_count > 1:
-                        print("Cloning " + dataset_uuid + ":" + uuid)
                         samples_to_clone_metadata[uuid] = meta_uuid
-                    else:
-                        print("Will not clone " + dataset_uuid + ":" + uuid)
                     
                 #if this sample is already set to public, no need to set again
                 if not data_access_level == 'public':
