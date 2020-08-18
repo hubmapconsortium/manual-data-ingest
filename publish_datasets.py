@@ -128,27 +128,30 @@ class DatasetWorker:
                 if not tl.startswith('#'):
                     self.ds_ids.append(tl)
         
-        
         self.setfacls = SET_ACLS
         #check to see if the setfacl command is available
         if shutil.which('setfacl') is None:
             self.setfacls = False
 
+        self.donors_to_reindex = []
         
     def publish_all(self):
-        for id in self.ds_ids:
-            msg = self.publish_single(id)
+        self.donors_to_reindex = []
+        for dsid in self.ds_ids:
+            msg = self.publish_single(dsid)
             if not msg is None:
                 self.error_logger.error(msg)
                 print(msg)
-                self.recording_logger.info(id + "\t????\tNOT PUBLISHED\t" + msg)
+                self.recording_logger.info(dsid + "\t????\tNOT PUBLISHED\t" + msg)
+        
+        self._reindex_donors()
                     
         if not self.setfacls:
             msg = "The setfacl command isn't available or turned off.  Make sure to set the file system level protections correctly on any moved datasets with the command\nsetfacl -R --set=" + self.public_facls
             self.error_logger.warning(msg)
-            self.recording_logger.warning(id + "\t????\tSETFACL WARNING\tsetfacl wasn't available")
+            self.recording_logger.warning(dsid + "\t????\tSETFACL WARNING\tsetfacl wasn't available")
             print(msg)
-
+        
     def publish_single(self, dataset_id):
         
         #check that it is a valid id and convert to uuid if not already
@@ -244,7 +247,27 @@ class DatasetWorker:
         else:
             self.recording_logger.info(dataset_id + "\t" + dataset_uuid + "\tREINDEX\t" + url)
 
+        if not donor_uuid in self.donors_to_reindex:
+            self.donors_to_reindex.append(donor_uuid)
+
         return None
+    
+    def _reindex_donors(self):
+        #reindex everything by calling the reindexer for each affected Donor
+        #which will trigger a reindex of all children
+        for donor_uuid in self.donors_to_reindex:
+            url = self.search_api_url + "reindex/" + donor_uuid
+            headers = {'Authorization': 'Bearer ' + self.token}
+            if not TRIAL_RUN:
+                resp = requests.put(url, headers=headers)
+                status_code = resp.status_code
+                if status_code < 200 or status_code >= 300:
+                    return "??????: ERROR calling reindexer for dataset, donor id: " + donor_uuid
+                else:
+                    self.recording_logger.info("????\t????\tREINDEX\t" + url)
+            else:
+                self.recording_logger.info("????\t????\tREINDEX\t" + url)
+        
         
     def _count_samples_on_metadata_node(self, meta_uuid):
         #print(COUNT_SAMPLES_ATTACHED_TO_META.format(meta_uuid=meta_uuid))
