@@ -232,17 +232,17 @@ class DatasetWorker:
             if not TRIAL_RUN: self.graph.run(update_q)
                 
         #reindex everything by calling the reindexer for the Donor, which will trigger a reindex of all children
-        url = self.search_api_url + "reindex/" + donor_uuid
-        headers = {'Authorization': 'Bearer ' + self.token}
-        if not TRIAL_RUN:
-            resp = requests.put(url, headers=headers)
-            status_code = resp.status_code
-            if status_code < 200 or status_code >= 300:
-                return dataset_uuid + ": ERROR calling reindexer for dataset, donor id: " + donor_uuid
-            else:
-                self.recording_logger.info(dataset_id + "\t" + dataset_uuid + "\tREINDEX\t" + url)
-        else:
-            self.recording_logger.info(dataset_id + "\t" + dataset_uuid + "\tREINDEX\t" + url)
+#        url = self.search_api_url + "reindex/" + donor_uuid
+#        headers = {'Authorization': 'Bearer ' + self.token}
+#        if not TRIAL_RUN:
+#            resp = requests.put(url, headers=headers)
+#            status_code = resp.status_code
+#            if status_code < 200 or status_code >= 300:
+#                return dataset_uuid + ": ERROR calling reindexer for dataset, donor id: " + donor_uuid
+#            else:
+#                self.recording_logger.info(dataset_id + "\t" + dataset_uuid + "\tREINDEX\t" + url)
+#        else:
+#            self.recording_logger.info(dataset_id + "\t" + dataset_uuid + "\tREINDEX\t" + url)
 
         if not donor_uuid in self.donors_to_reindex:
             self.donors_to_reindex.append(donor_uuid)
