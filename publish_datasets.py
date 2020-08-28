@@ -1,3 +1,29 @@
+#script to flag datasets as public.
+#
+#this script needs to be run in a python 3 environment with the dependencies in requirements.txt installed
+#
+#This script uses the properites defined in the data_ingest.properties file in the same directory.
+#The datasets that will be published are specified in a text file with a uuid per line, this
+#file is specified in the dataset.uuid.file property.
+#
+#Two timestamped log files are created, one recording all actions, the other listing errors.
+#
+#The following actions are performed for each dataset to be published:
+#  -If the direct parent is a dataset and that dataset isn't published
+#   an error is produced and the dataset isn't published
+#  -mark all ancestors as "public"
+#     --including splitting any samples in the hierarchy from other
+#       samples that share the same Metadata node in Neo4j
+#       otherwise all samples sharing the Metadata node will be marked as public
+#  -mark the dataset as Published
+#  -if the dataset was consortium level
+#     --mark it as "public"
+#     --move it to the data/public/ directory on the /hive/ file system
+#     --fix the README in the old lz/ directory, if it exists
+#     --set the acls on the moved data for public access
+#  -reindex
+#
+
 import sys
 import os
 from hubmap_commons import string_helper
@@ -24,7 +50,14 @@ CLONE_META_NODE_ENTITY = "match(e:Entity {uuid: {ent_uuid}})-[:HAS_METADATA]-(me
 UNLINK_META_NODE_ENTITY = "match (m:Metadata)-[lnk:HAS_METADATA]-(e:Entity {uuid: {ent_uuid}}) delete lnk"
 LINK_META_NODE_ENTITY = "MATCH (e:Entity {uuid: {ent_uuid}}),(m:Metadata {uuid: {meta_uuid}}) CREATE (e)-[lnk:HAS_METADATA]->(m) RETURN type(lnk)"
 PUBLIC_FACLS = 'u::rwx,g::r-x,o::r-x,m::rwx,u:{hive_user}:rwx,u:{globus_user}:rwx,d:user::rwx,d:user:{hive_user}:rwx,d:user:{globus_user}:rwx,d:group::r-x,d:mask::rwx,d:other:r-x'
+
+#If set to true, only print (and log) what will be done
 TRIAL_RUN = False
+
+#if set to true set the public acls after data is moved
+#the acls will be set with the setfacl command
+#this can take a while, so it is suggested to run afterward
+#on the whole public directory
 SET_ACLS = False
 
 class DatasetWorker:
@@ -33,6 +66,7 @@ class DatasetWorker:
     #check the auth token and read the tsv file data into a dictionary
     #and the header labels into a list
     def __init__(self, property_file_name):
+        #set up log files, first for errors, second to record all actions
         cur_time = time.strftime("%d-%m-%Y-%H-%M-%S")
         error_log_filename = "publish_datasets_err" + cur_time + ".log"
         self.error_logger = logging.getLogger('publish.datasets.err')
@@ -46,7 +80,7 @@ class DatasetWorker:
         recording_logFH = logging.FileHandler(recording_log_filename)
         self.recording_logger.addHandler(recording_logFH)
         
-        
+        #initialize variables, get required values from property file
         self.dataset_info = None
         self.dataset_info_tsv_path = None
         self.props = IngestProps(property_file_name, required_props = ['nexus.token', 'neo4j.server', 'neo4j.username', 'neo4j.password', 'consortium.dataset.dir', 'public.dataset.dir', 'hive.username', 'globus.username', 'globus.app.client.id', 'globus.app.client.secret', 'search.api.url', 'old.lz.dataset.dir', 'uuid.api.url'])
@@ -58,6 +92,8 @@ class DatasetWorker:
         self.consortium_dir = file_helper.ensureTrailingSlash(self.props.get('consortium.dataset.dir'))        
         self.search_api_url = file_helper.ensureTrailingSlashURL(self.props.get('search.api.url'))
         
+        #initialize the auth helper and use it to get the
+        #user information for the person running the script
         auth_helper = AuthHelper.instance()
         user_info = auth_helper.getUserInfo(self.token, getGroups = True)        
         if isinstance(user_info, Response):
@@ -80,6 +116,7 @@ class DatasetWorker:
         else:
             raise ErrorMessage("user full name not found for token")
                 
+
         if not os.path.isdir(self.consortium_dir):
             raise ErrorMessage("consortium dataset dir not found: " + self.consortium_dir)
         if not os.access(self.consortium_dir, os.W_OK):
@@ -94,7 +131,8 @@ class DatasetWorker:
             raise ErrorMessage("old lz directory not found: ") + self.old_lz_dir
         if not os.access(self.old_lz_dir, os.W_OK):
             raise ErrorMessage("old lz directory is not writable: ") + self.old_lz_dir
-        
+
+        #make a connection to the Neo4j db
         self.graph = Graph(self.neo4j_server, auth=(self.neo4j_user, self.neo4j_password))
         if len(sys.argv) >= 2:
             self.id_file = sys.argv[1]
@@ -134,9 +172,12 @@ class DatasetWorker:
             self.setfacls = False
 
         self.donors_to_reindex = []
-        
+    
+    #main method, loops through all dataset uuids
+    #then index the donors
     def publish_all(self):
         self.donors_to_reindex = []
+        
         for dsid in self.ds_ids:
             msg = self.publish_single(dsid)
             if not msg is None:
@@ -144,16 +185,26 @@ class DatasetWorker:
                 print(msg)
                 self.recording_logger.info(dsid + "\t????\tNOT PUBLISHED\t" + msg)
         
+        #reindex the donor ancestors
+        #of all published datasets
+        #do this here so donors (and all ancestors) aren't reindexed multiple times
         self._reindex_donors()
-                    
+    
+        #if the acls weren't set print a message to remind us to set them
         if not self.setfacls:
             msg = "The setfacl command isn't available or turned off.  Make sure to set the file system level protections correctly on any moved datasets with the command\nsetfacl -R --set=" + self.public_facls
             self.error_logger.warning(msg)
-            self.recording_logger.warning(dsid + "\t????\tSETFACL WARNING\tsetfacl wasn't available")
+            self.recording_logger.warning("\t????\tSETFACL WARNING\tsetfacl wasn't available")
             print(msg)
-        
+    
+        #print and log a warning message to check the links in the assets/ directory
+        msg = "\nCheck for broken links in the assets/ directory and relink to the dataset in the data/public/ directory."
+        self.error_logger.warning(msg)
+        self.recording_logger.warning("\t????\tSETFACL WARNING\t"+msg)
+        print(msg)
+
+
     def publish_single(self, dataset_id):
-        
         #check that it is a valid id and convert to uuid if not already
         dataset_uuid = self.uuid_helper.resolve_to_uuid(dataset_id)
         if dataset_uuid is None:
@@ -231,19 +282,7 @@ class DatasetWorker:
             self.recording_logger.info(dataset_id + "\t" + dataset_uuid + "\tNEO4J-update-ancestors\t" + update_q)
             if not TRIAL_RUN: self.graph.run(update_q)
                 
-        #reindex everything by calling the reindexer for the Donor, which will trigger a reindex of all children
-#        url = self.search_api_url + "reindex/" + donor_uuid
-#        headers = {'Authorization': 'Bearer ' + self.token}
-#        if not TRIAL_RUN:
-#            resp = requests.put(url, headers=headers)
-#            status_code = resp.status_code
-#            if status_code < 200 or status_code >= 300:
-#                return dataset_uuid + ": ERROR calling reindexer for dataset, donor id: " + donor_uuid
-#            else:
-#                self.recording_logger.info(dataset_id + "\t" + dataset_uuid + "\tREINDEX\t" + url)
-#        else:
-#            self.recording_logger.info(dataset_id + "\t" + dataset_uuid + "\tREINDEX\t" + url)
-
+        #save the donor id to reindex later
         if not donor_uuid in self.donors_to_reindex:
             self.donors_to_reindex.append(donor_uuid)
 
