@@ -12,7 +12,7 @@ from id_helper import UUIDHelper
 from hubmap_commons.hm_auth import AuthHelper
 from py2neo import Graph
 
-CREATE_COLLECTION_Q = "CREATE (c:Collection {entitytype: 'Collection', uuid:{uuid}, provenance_create_timestamp: TIMESTAMP(), provenance_user_email: {provenance_user_email}, provenance_user_displayname: {provenance_user_displayname}, label: {name}, doi_registered: false, description: {description}, display_doi: {display_doi}, doi: {doi}, creators: {creators}})"
+CREATE_COLLECTION_Q = "CREATE (c:Collection {entitytype: 'Collection', uuid:{uuid}, provenance_create_timestamp: TIMESTAMP(), provenance_modified_timestamp: TIMESTAMP(), provenance_user_email: {provenance_user_email}, provenance_user_displayname: {provenance_user_displayname}, label: {name}, doi_registered: false, description: {description}, display_doi: {display_doi}, doi: {doi}, creators: {creators}})"
 ASSOCIATE_COLLECTION_Q = "match (c:Collection {uuid: {coll_uuid}}), (ds:Entity {entitytype:'Dataset', uuid: {ds_uuid}}) CREATE (c)<-[ic:IN_COLLECTION]-(ds) return ic"
 class CollectionIngest:
     
