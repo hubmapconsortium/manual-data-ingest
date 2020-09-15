@@ -31,15 +31,19 @@ class DatasetExport:
         self._dump_to_file("protected-dataset-dirs.txt", FIND_PROTECTED)
         self._dump_to_file("consortium-dataset-dirs.txt", FIND_CONSORTIUM)
         self._dump_to_file("public-dataset-dirs.txt", FIND_PUBLIC)
+        self._dump_to_file("public-dataset-dirs-new.txt", FIND_PUBLIC, False)
         self._dump_to_file("protected-derived-dataset-dirs.txt", FIND_DERIVED_PROTECTED)
         self._dump_to_file("consortium-derived-dataset-dirs.txt", FIND_DERIVED_CONSORTIUM)
-        self._dump_to_file("public-derived-dataset-dirs.txt", FIND_DERIVED_PUBLIC)
+        self._dump_to_file("public-derived-dataset-dirs-new.txt", FIND_DERIVED_PUBLIC, False)
                 
-    def _dump_to_file(self, filename, query):
+    def _dump_to_file(self, filename, query, add_tmc_dir=True):
         recds = self.graph.run(query).data()
-        with open(filename, 'w') as writer:        
+        grp_name = ''
+        with open(filename, 'w') as writer:
             for recd in recds:
-                writer.write(self.groups[recd['group_id']].replace(' ', '\\ ') + '/' + recd['uuid'] + '\n')
+                if add_tmc_dir:
+                    grp_name = self.groups[recd['group_id']].replace(' ', '\\ ') + '/'
+                writer.write(grp_name + recd['uuid'] + '\n')
     
 try:
     exp = DatasetExport(os.path.dirname(os.path.realpath(__file__)) + "/data_ingest.properties")

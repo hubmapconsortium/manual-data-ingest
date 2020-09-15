@@ -8,3 +8,5 @@ data_ingest.properties
 
 # Ignore log but keep the log directory
 **/*.log
+
+*.pyc
