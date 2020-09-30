@@ -60,7 +60,7 @@ SET
     A.activity_type = A.activitytype
 REMOVE 
     A.activitytype
-RETURN E
+RETURN A
 ````
 
 # Step 6: delete all Metadata nodes and all HAS_METADATA relationships
