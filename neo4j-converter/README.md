@@ -1,4 +1,24 @@
-# Step 1: rename conflicting Metadata node properties
+# Step 1: drop all old indexes
+
+List all the current indexes with the following query:
+
+````
+CALL db.indexes()
+````
+
+Try to drop all the indexes with:
+
+````
+CALL apoc.schema.assert({},{},true) YIELD label, key 
+RETURN *
+````
+If encounter any errors, try to drop them individually:
+
+````
+CALL  db.index.fulltext.drop("indexName")
+````
+
+# Step 2: rename conflicting Metadata node properties
 
 ````
 MATCH (M:Metadata)
@@ -17,7 +37,7 @@ REMOVE
 RETURN M
 ````
 
-# Step 2: copy all Metadata node properties to Entity node
+# Step 3: copy all Metadata node properties to Entity node
 
 Since we have lots of nodes, it's advisable to perform the operation in smaller batches. Here is an example of limiting the operation to 1000 at a time.
 
@@ -29,7 +49,7 @@ SET E += M
 RETURN E, M
 ````
 
-# Step 3: copy all Metadata node properties to Activity node
+# Step 4: copy all Metadata node properties to Activity node
 
 ````
 MATCH (A:Activity) - [:HAS_METADATA] -> (M:Metadata)
@@ -39,7 +59,7 @@ SET A += M
 RETURN A, M
 ````
 
-# Step 4: normalize Entity node properties
+# Step 5: normalize Entity node properties
 
 ````
 MATCH (E:Entity)
@@ -52,7 +72,7 @@ REMOVE
 RETURN E
 ````
 
-# Step 5: normalize Activity node properties
+# Step 6: normalize Activity node properties
 
 ````
 MATCH (A:Activity)
@@ -63,7 +83,7 @@ REMOVE
 RETURN A
 ````
 
-# Step 6: normalize Collection node properties
+# Step 7: normalize Collection node properties
 
 ````
 MATCH (C:Collection)
@@ -74,15 +94,11 @@ REMOVE
 RETURN C
 ````
 
-# Step 7: delete all Metadata nodes and all HAS_METADATA relationships
+# Step 8: delete all Metadata nodes and all HAS_METADATA relationships
 
 This action will all the Metadata nodes and any relationship (HAS_METADATA is the only one) going to or from it.
 
 ````
 MATCH (M:Metadata)
 DETACH DELETE M
-````
-
-# Step 8: Get rid off unwanted property keys, labels, and indices
-
-Use https://github.com/jexp/store-utils which is an offline process to read our graph database and copy its (contents, nodes, relationships) to a new graph database and only include property keys associated with nodes.
+```
