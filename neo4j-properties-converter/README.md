@@ -6,7 +6,7 @@ SET m.metadata_entitytype = m.entitytype,
     m.metadata_uuid = m.uuid, 
     m.metadata_label = m.label,
     m.metadata_provenance_create_timestamp = m.provenance_create_timestamp,
-    m.metadata_modified_create_timestamp = m.provenance_modified_timestamp
+    m.metadata_provenance_modified_timestamp = m.provenance_modified_timestamp
 REMOVE m.entitytype, 
     m.uuid, 
     m.label, 
