@@ -1,4 +1,4 @@
-# Rename conflicting Metadata node properties
+# Step 1: rename conflicting Metadata node properties
 
 ````
 MATCH (m:Metadata)
@@ -15,16 +15,14 @@ REMOVE m.entitytype,
 RETURN m
 ````
 
-# Copy all Metadata node properties to Entity node
+# Step 2: copy all Metadata node properties to Entity node
+
+Since we have lots of nodes, it's advisable to perform the operation in smaller batches. Here is an example of limiting the operation to 1000 at a time.
 
 ````
-MATCH (e:Entity {entitytype:"Donor"}) - [:HAS_METADATA] -> (m:Metadata)
-SET e += m
-RETURN e, m
-````
-
-````
-MATCH (e:Entity {entitytype:"Dataset"}) - [:HAS_METADATA] -> (m:Metadata)
+MATCH (e:Entity) - [:HAS_METADATA] -> (m:Metadata)
+WITH e, m
+LIMIT 1000
 SET e += m
 RETURN e, m
 ````
