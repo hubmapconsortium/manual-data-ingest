@@ -101,4 +101,8 @@ This action will all the Metadata nodes and any relationship (HAS_METADATA is th
 ````
 MATCH (M:Metadata)
 DETACH DELETE M
-```
+````
+
+# Why do my deleted property keys appear?
+
+After completing the above steps, you'll still see some of the deleted property keys on the left panel of the Neo4j browser even though are no longer associated with any nodes. This is expected. Unlike labels and relationship types which have underlying meta-data that report the number of objects for each, there is no meta-data for property keys.
