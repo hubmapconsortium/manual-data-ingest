@@ -63,7 +63,18 @@ REMOVE
 RETURN A
 ````
 
-# Step 6: delete all Metadata nodes and all HAS_METADATA relationships
+# Step 6: normalize Collection node properties
+
+````
+MATCH (C:Collection)
+SET 
+    C.entity_type = C.entitytype
+REMOVE 
+    C.entitytype
+RETURN C
+````
+
+# Step 7: delete all Metadata nodes and all HAS_METADATA relationships
 
 This action will all the Metadata nodes and any relationship (HAS_METADATA is the only one) going to or from it.
 
@@ -71,3 +82,7 @@ This action will all the Metadata nodes and any relationship (HAS_METADATA is th
 MATCH (M:Metadata)
 DETACH DELETE M
 ````
+
+# Step 8: Get rid off unwanted property keys, labels, and indices
+
+Use https://github.com/jexp/store-utils which is an offline process to read our graph database and copy its (contents, nodes, relationships) to a new graph database and only include property keys associated with nodes.
