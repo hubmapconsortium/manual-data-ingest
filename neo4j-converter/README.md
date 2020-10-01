@@ -164,7 +164,7 @@ RETURN batches, total
 
 # Step 8: delete all Metadata nodes and all HAS_METADATA relationships
 
-This action will all the Metadata nodes and any relationship (HAS_METADATA is the only one) going to or from it.
+This action will delete all the Metadata nodes and any relationship (HAS_METADATA is the only one) going to or from it.
 
 ````
 CALL apoc.periodic.iterate(
