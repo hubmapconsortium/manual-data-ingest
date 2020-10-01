@@ -206,3 +206,23 @@ Based on the search needs, recreate either single-property index or composite in
 # Why do those deleted property keys still appear?
 
 After completing the above steps, you may notice that some of the deleted property keys still appear on the left panel of the Neo4j browser even though they are no longer associated with any nodes. This is expected. Unlike labels and relationship types which have underlying meta-data that report the number of objects for each, there is no meta-data for property keys.
+
+# Create new labels based on `entity_type` if desired
+
+````
+match (n:Entity {entity_type:"Dataset"})
+set n :Dataset
+return n
+````
+
+````
+match (n:Entity {entity_type:"Sample"})
+set n :Sample
+return n
+````
+
+````
+match (n:Entity {entity_type:"Donor"})
+set n :Donor
+return n
+````
