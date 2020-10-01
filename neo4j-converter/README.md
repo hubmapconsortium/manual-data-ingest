@@ -45,19 +45,38 @@ Once all indexes dropped, verify with
 call db.indexes()
 ````
 
-# Step 2: rename conflicting Metadata node properties
+# Step 2: normalize Metadata node properties
+
+Question: Metadata, Entity, and Activity all have the `provenance_create_timestamp` property, but this property in Metadata and Activity is not getting converted in the https://github.com/hubmapconsortium/search-api/blob/master/src/elasticsearch/neo4j-to-es-attributes.json
 
 ````
 CALL apoc.periodic.iterate(
     "MATCH (M:Metadata) RETURN M", 
     "SET 
-        M.metadata_label = M.label
+        M.lab_tissue_sample_id = M.lab_tissue_id,
+        M.portal_uploaded_image_files = M.image_file_metadata,
+        M.lab_name = M.label,
+        M.portal_metadata_upload_files = M.metadatas,
+        M.contains_human_genetic_sequences = M.phi,
+        M.protocol_url = M.protocol,
+        M.group_uuid = M.provenance_group_uuid,
+        M.last_modified_timestamp = M.provenance_modified_timestamp,
+        M.created_by_user_displayname = M.provenance_user_displayname,
+        M.created_by_user_email = M.provenance_user_email
     REMOVE 
+        M.lab_tissue_id,
+        M.image_file_metadata,
+        M.label,
+        M.metadatas,
+        M.phi,
+        M.protocol,
+        M.provenance_group_uuid,
+        M.provenance_modified_timestamp,
+        M.provenance_user_displayname,
+        M.provenance_user_email,
         M.entitytype, 
         M.uuid, 
-        M.label, 
-        M.provenance_create_timestamp, 
-        M.provenance_modified_timestamp", 
+        M.provenance_create_timestamp", 
     {batchSize:1000}
 )
 YIELD batches, total 
@@ -98,32 +117,11 @@ CALL apoc.periodic.iterate(
     "SET 
         E.entity_type = E.entitytype,
         E.hubmap_display_id = E.hubmap_identifier,
-        E.create_timestamp = E.provenance_create_timestamp,
-        E.portal_uploaded_image_files = E.image_file_metadata,
-        E.lab_name = E.label,
-        E.portal_metadata_upload_files = E.metadatas,
-        E.contains_human_genetic_sequences = E.phi,
-        E.protocol_url = E.protocol,
-        E.group_uuid = E.provenance_group_uuid,
-        E.last_modified_timestamp = E.provenance_modified_timestamp,
-        E.created_by_user_displayname = E.provenance_user_displayname,
-        E.created_by_user_email = E.provenance_user_email
+        E.create_timestamp = E.provenance_create_timestamp
     REMOVE 
         E.entitytype,
         E.hubmap_identifier,
-        E.provenance_create_timestamp,
-        E.image_file_metadata,
-        E.label,
-        E.metadatas,
-        E.phi,
-        E.protocol,
-        E.provenance_group_uuid,
-        E.provenance_modified_timestamp,
-        E.provenance_user_displayname,
-        E.provenance_user_email,
-        E.metadata_entitytype,
-        E.metadata_uuid,
-        E.metadata_label", 
+        E.provenance_create_timestamp", 
     {batchSize:1000}
 )
 YIELD batches, total 
