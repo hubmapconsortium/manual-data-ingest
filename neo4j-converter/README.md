@@ -47,7 +47,9 @@ call db.indexes()
 
 # Step 2: normalize Metadata node properties
 
-Question: Metadata, Entity, and Activity all have the `provenance_create_timestamp` property, but this property in Metadata and Activity is not getting converted in the https://github.com/hubmapconsortium/search-api/blob/master/src/elasticsearch/neo4j-to-es-attributes.json
+Questions: 
+1. Metadata, Entity, and Activity all have the `provenance_create_timestamp` property, but this property in Metadata and Activity is not getting converted in the https://github.com/hubmapconsortium/search-api/blob/master/src/elasticsearch/neo4j-to-es-attributes.json
+2. How to handle `ingest_metadata`, `specimen_metadata`? In the https://github.com/hubmapconsortium/search-api/blob/master/src/elasticsearch/neo4j-to-es-attributes.json, they both get mapped to `metadata`. And the original `metadata` is also mapped to `metadata`.
 
 ````
 CALL apoc.periodic.iterate(
@@ -74,7 +76,9 @@ CALL apoc.periodic.iterate(
         M.provenance_modified_timestamp,
         M.provenance_user_displayname,
         M.provenance_user_email,
+        
         M.entitytype, 
+        M.reference_uuid,
         M.uuid, 
         M.provenance_create_timestamp", 
     {batchSize:1000}
