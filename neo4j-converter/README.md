@@ -48,7 +48,8 @@ Questions:
 CALL apoc.periodic.iterate(
     "MATCH (M:Metadata) RETURN M", 
     "SET 
-        // Rename property keys based on https://github.com/hubmapconsortium/search-api/blob/master/src/elasticsearch/neo4j-to-es-attributes.json
+        // Rename property keys based on 
+        // https://github.com/hubmapconsortium/search-api/blob/master/src/elasticsearch/neo4j-to-es-attributes.json
         M.lab_tissue_sample_id = M.lab_tissue_id,
         M.portal_uploaded_image_files = M.image_file_metadata,
         M.lab_name = M.label,
@@ -114,7 +115,8 @@ RETURN batches, total
 CALL apoc.periodic.iterate(
     "MATCH (E:Entity) RETURN E", 
     "SET 
-        // Rename property keys based on https://github.com/hubmapconsortium/search-api/blob/master/src/elasticsearch/neo4j-to-es-attributes.json
+        // Rename property keys based on 
+        // https://github.com/hubmapconsortium/search-api/blob/master/src/elasticsearch/neo4j-to-es-attributes.json
         E.entity_type = E.entitytype,
         E.hubmap_display_id = E.hubmap_identifier,
         E.create_timestamp = E.provenance_create_timestamp
@@ -135,7 +137,8 @@ RETURN batches, total
 CALL apoc.periodic.iterate(
     "MATCH (A:Activity) RETURN A", 
     "SET 
-        // Rename property keys based on https://github.com/hubmapconsortium/search-api/blob/master/src/elasticsearch/neo4j-to-es-attributes.json
+        // Rename property keys based on 
+        // https://github.com/hubmapconsortium/search-api/blob/master/src/elasticsearch/neo4j-to-es-attributes.json
         A.creation_action = A.activitytype
     REMOVE 
         // Remove properties(key/value) that have been renamed
