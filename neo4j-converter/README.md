@@ -48,6 +48,7 @@ Questions:
 CALL apoc.periodic.iterate(
     "MATCH (M:Metadata) RETURN M", 
     "SET 
+        // Rename property keys based on https://github.com/hubmapconsortium/search-api/blob/master/src/elasticsearch/neo4j-to-es-attributes.json
         M.lab_tissue_sample_id = M.lab_tissue_id,
         M.portal_uploaded_image_files = M.image_file_metadata,
         M.lab_name = M.label,
@@ -59,6 +60,7 @@ CALL apoc.periodic.iterate(
         M.created_by_user_displayname = M.provenance_user_displayname,
         M.created_by_user_email = M.provenance_user_email
     REMOVE 
+        // Remove properties key/value that have been renamed
         M.lab_tissue_id,
         M.image_file_metadata,
         M.label,
@@ -69,7 +71,7 @@ CALL apoc.periodic.iterate(
         M.provenance_modified_timestamp,
         M.provenance_user_displayname,
         M.provenance_user_email,
-        
+        // Remove the flowwing properties key/value directly without copying to Entity/Activity nodes
         M.entitytype, 
         M.reference_uuid,
         M.uuid, 
@@ -112,10 +114,12 @@ RETURN batches, total
 CALL apoc.periodic.iterate(
     "MATCH (E:Entity) RETURN E", 
     "SET 
+        // Rename property keys based on https://github.com/hubmapconsortium/search-api/blob/master/src/elasticsearch/neo4j-to-es-attributes.json
         E.entity_type = E.entitytype,
         E.hubmap_display_id = E.hubmap_identifier,
         E.create_timestamp = E.provenance_create_timestamp
     REMOVE 
+        // Remove properties(key/value) that have been renamed
         E.entitytype,
         E.hubmap_identifier,
         E.provenance_create_timestamp", 
@@ -131,8 +135,10 @@ RETURN batches, total
 CALL apoc.periodic.iterate(
     "MATCH (A:Activity) RETURN A", 
     "SET 
+        // Rename property keys based on https://github.com/hubmapconsortium/search-api/blob/master/src/elasticsearch/neo4j-to-es-attributes.json
         A.creation_action = A.activitytype
     REMOVE 
+        // Remove properties(key/value) that have been renamed
         A.activitytype", 
     {batchSize:1000}
 )
