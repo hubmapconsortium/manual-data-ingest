@@ -38,7 +38,25 @@ Once all indexes dropped, verify with
 call db.indexes()
 ````
 
-# Step 2: normalize Metadata node properties
+# Step 2: find and delete orphan nodes
+
+````
+MATCH (n)
+WHERE NOT (n)--() 
+RETURN n
+````
+
+If all the resulting orphan nodes can be deleted, do it with:
+
+````
+MATCH (n)
+WHERE NOT (n)--()
+DELETE n
+````
+
+If some of the orphan nodes needs to stay, run a new search and delete using the corresponding labels or filterings.
+
+# Step 3: normalize Metadata node properties
 
 Questions: 
 1. Metadata, Entity, and Activity all have the `provenance_create_timestamp` property, but this property in Metadata and Activity is not getting converted in the https://github.com/hubmapconsortium/search-api/blob/master/src/elasticsearch/neo4j-to-es-attributes.json
@@ -84,7 +102,7 @@ YIELD batches, total
 RETURN batches, total
 ````
 
-# Step 3: copy all Metadata node properties to Entity node
+# Step 4: copy all Metadata node properties to Entity node
 
 Since we have lots of nodes, it's advisable to perform the operation in smaller batches. Here is an example of limiting the operation to 1000 at a time.
 
@@ -98,7 +116,7 @@ YIELD batches, total
 RETURN batches, total
 ````
 
-# Step 4: copy all Metadata node properties to Activity node
+# Step 5: copy all Metadata node properties to Activity node
 
 ````
 CALL apoc.periodic.iterate(
@@ -110,7 +128,7 @@ YIELD batches, total
 RETURN batches, total
 ````
 
-# Step 5: normalize Entity node properties
+# Step 6: normalize Entity node properties
 
 ````
 CALL apoc.periodic.iterate(
@@ -132,7 +150,7 @@ YIELD batches, total
 RETURN batches, total
 ````
 
-# Step 6: normalize Activity node properties
+# Step 7: normalize Activity node properties
 
 ````
 CALL apoc.periodic.iterate(
@@ -150,7 +168,7 @@ YIELD batches, total
 RETURN batches, total
 ````
 
-# Step 7: normalize Collection node properties
+# Step 8: normalize Collection node properties
 
 ````
 CALL apoc.periodic.iterate(
@@ -165,7 +183,7 @@ YIELD batches, total
 RETURN batches, total
 ````
 
-# Step 8: delete all Metadata nodes and all HAS_METADATA relationships
+# Step 9: delete all Metadata nodes and all HAS_METADATA relationships
 
 This action will delete all the Metadata nodes and any relationship (HAS_METADATA is the only one) going to or from it.
 
@@ -181,7 +199,15 @@ RETURN batches, total
 
 At this point, all the Metadata nodes and any relationship (HAS_METADATA is the only one) going to or from it should have been deleted from the database. The `total` number of deleted Metadata nodes should match the total number returned from Step 1.
 
-# Step 9: Recreate indexes
+# Step 10: check if new orphan nodes created
+
+````
+MATCH (n)
+WHERE NOT (n)--() 
+RETURN n
+````
+
+# Step 11: Recreate indexes
 
 Based on the search needs, recreate either single-property index or composite index. Best practice is to give the index a name when it is created. More info: https://neo4j.com/docs/cypher-manual/current/administration/indexes-for-search-performance/
 
