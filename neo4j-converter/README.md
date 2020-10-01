@@ -199,15 +199,7 @@ RETURN batches, total
 
 At this point, all the Metadata nodes and any relationship (HAS_METADATA is the only one) going to or from it should have been deleted from the database. The `total` number of deleted Metadata nodes should match the total number returned from Step 1.
 
-# Step 10: check if new orphan nodes created
-
-````
-MATCH (n)
-WHERE NOT (n)--() 
-RETURN n
-````
-
-# Step 11: Recreate indexes
+# Step 10: Recreate indexes
 
 Based on the search needs, recreate either single-property index or composite index. Best practice is to give the index a name when it is created. More info: https://neo4j.com/docs/cypher-manual/current/administration/indexes-for-search-performance/
 
