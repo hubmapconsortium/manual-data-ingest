@@ -51,10 +51,7 @@ call db.indexes()
 CALL apoc.periodic.iterate(
     "MATCH (M:Metadata) RETURN M", 
     "SET 
-        M.metadata_uuid = M.uuid, 
-        M.metadata_label = M.label,
-        M.metadata_provenance_create_timestamp = M.provenance_create_timestamp,
-        M.metadata_provenance_modified_timestamp = M.provenance_modified_timestamp
+        M.metadata_label = M.label
     REMOVE 
         M.entitytype, 
         M.uuid, 
