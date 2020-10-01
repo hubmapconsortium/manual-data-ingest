@@ -100,11 +100,34 @@ RETURN batches, total
 CALL apoc.periodic.iterate(
     "MATCH (E:Entity) RETURN E", 
     "SET 
-        E.entity_type = E.entitytype
+        E.entity_type = E.entitytype,
+        E.hubmap_display_id = E.hubmap_identifier,
+        E.create_timestamp = E.provenance_create_timestamp,
+        E.portal_uploaded_image_files = E.image_file_metadata,
+        E.lab_name = E.label,
+        E.portal_metadata_upload_files = E.metadatas,
+        E.contains_human_genetic_sequences = E.phi,
+        E.protocol_url = E.protocol,
+        E.group_uuid = E.provenance_group_uuid,
+        E.last_modified_timestamp = E.provenance_modified_timestamp,
+        E.created_by_user_displayname = E.provenance_user_displayname,
+        E.created_by_user_email = E.provenance_user_email,
     REMOVE 
         E.entitytype,
+        E.hubmap_identifier,
+        E.provenance_create_timestamp,
+        E.image_file_metadata,
+        E.label,
+        E.metadatas,
+        E.phi,
+        E.protocol,
+        E.provenance_group_uuid,
+        E.provenance_modified_timestamp,
+        E.provenance_user_displayname,
+        E.provenance_user_email,
         E.metadata_entitytype,
-        E.metadata_uuid", 
+        E.metadata_uuid,
+        E.metadata_label", 
     {batchSize:1000}
 )
 YIELD batches, total 
@@ -117,7 +140,7 @@ RETURN batches, total
 CALL apoc.periodic.iterate(
     "MATCH (A:Activity) RETURN A", 
     "SET 
-        A.activity_type = A.activitytype
+        A.creation_action = A.activitytype
     REMOVE 
         A.activitytype", 
     {batchSize:1000}
