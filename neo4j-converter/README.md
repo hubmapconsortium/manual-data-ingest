@@ -107,7 +107,7 @@ CALL apoc.periodic.iterate(
         E.group_uuid = E.provenance_group_uuid,
         E.last_modified_timestamp = E.provenance_modified_timestamp,
         E.created_by_user_displayname = E.provenance_user_displayname,
-        E.created_by_user_email = E.provenance_user_email,
+        E.created_by_user_email = E.provenance_user_email
     REMOVE 
         E.entitytype,
         E.hubmap_identifier,
