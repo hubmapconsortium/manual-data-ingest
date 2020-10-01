@@ -19,20 +19,13 @@ List all the current indexes with the following query:
 CALL db.indexes()
 ````
 
-If all the returned indexes are single-property index, drop all the indexes with:
-
-````
-CALL apoc.schema.assert({},{},true) YIELD label, key 
-RETURN *
-````
-
 If there's at least one composite index, we firs need to drop them individually using their `indexName` from the result:
 
 ````
 CALL  db.index.fulltext.drop("targetIndexName")
 ````
 
-Then once the composite indexes are gone, we drop all the rest of the single-property index in one call:
+Once the composite indexes are gone, we drop all the rest of the single-property index in one call:
 
 ````
 CALL apoc.schema.assert({},{},true) YIELD label, key 
