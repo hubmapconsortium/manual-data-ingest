@@ -63,6 +63,30 @@ Questions:
 2. How to handle `ingest_metadata`, `specimen_metadata`? In the https://github.com/hubmapconsortium/search-api/blob/master/src/elasticsearch/neo4j-to-es-attributes.json, they both get mapped to `metadata`. And the original `metadata` is also mapped to `metadata`.
 3. Cypher query `MATCH (n:Entity {entitytype: "Sample"})- [:HAS_METADATA]-> (m:Metadata) RETURN n, m` shows that lots of Entity nodes share the same Metadata, why?
 
+## Property keys to be renamed
+
+| Current Property Key            | New Property Key                     |
+|---------------------------------|--------------------------------------|
+| lab\_tissue\_id                 | lab\_tissue\_sample\_id              |
+| image\_file\_metadata           | portal\_uploaded\_image\_files       |
+| label                           | lab\_name                            |
+| metadatas                       | portal\_metadata\_upload\_files      |
+| phi                             | contains\_human\_genetic\_sequences  |
+| protocol                        | protocol\_url                        |
+| provenance\_group\_uuid         | group\_uuid                          |
+| provenance\_modified\_timestamp | last\_modified\_timestamp            |
+| provenance\_user\_displayname   | created\_by\_user\_displayname       |
+| provenance\_user\_email         | created\_by\_user\_email             |
+
+## Property keys to be deleted without renaming
+
+| Property Key                  |
+|-------------------------------|
+| entitytype                    |
+| reference\_uuid               |
+| uuid                          |
+| provenance\_create\_timestamp |
+
 ````
 CALL apoc.periodic.iterate(
     "MATCH (M:Metadata) RETURN M", 
@@ -130,6 +154,14 @@ RETURN batches, total
 
 # Step 6: normalize Entity node properties
 
+## Property keys to be renamed
+
+| Current Property Key          | New Property Key     |
+|-------------------------------|----------------------|
+| entitytype                    | entity\_type         |
+| hubmap\_identifier            | hubmap\_display\_id  |
+| provenance\_create\_timestamp | create\_timestamp    |
+
 ````
 CALL apoc.periodic.iterate(
     "MATCH (E:Entity) RETURN E", 
@@ -152,6 +184,12 @@ RETURN batches, total
 
 # Step 7: normalize Activity node properties
 
+## Property keys to be renamed
+
+| Current Property Key | New Property Key |
+|----------------------|------------------|
+| activitytype         | creation\_action |
+
 ````
 CALL apoc.periodic.iterate(
     "MATCH (A:Activity) RETURN A", 
@@ -169,6 +207,12 @@ RETURN batches, total
 ````
 
 # Step 8: normalize Collection node properties
+
+## Property keys to be renamed
+
+| Current Property Key | New Property Key |
+|----------------------|------------------|
+| entitytype           | entity\_type     |
 
 ````
 CALL apoc.periodic.iterate(
