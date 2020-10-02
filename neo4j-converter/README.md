@@ -151,6 +151,7 @@ CALL apoc.periodic.iterate(
     "MATCH (A:Activity) - [:HAS_METADATA] -> (M:Metadata) RETURN A, M", 
     "SET A += M", 
     {batchSize:1000}
+    
 )
 YIELD batches, total, timeTaken, committedOperations, failedOperations
 RETURN batches, total, timeTaken, committedOperations, failedOperations
@@ -186,6 +187,29 @@ YIELD batches, total, timeTaken, committedOperations, failedOperations
 RETURN batches, total, timeTaken, committedOperations, failedOperations
 ````
 
+Veryfy the new property keys by `entity_type`:
+
+````
+MATCH (p:Entity {entity_type: "Donor"})
+WITH distinct p, keys(p) as pKeys
+UNWIND pKeys as Key
+RETURN distinct labels(p), Key, apoc.map.get(apoc.meta.cypher.types(p), Key, [true])
+````
+
+````
+MATCH (p:Entity {entity_type: "Sample"})
+WITH distinct p, keys(p) as pKeys
+UNWIND pKeys as Key
+RETURN distinct labels(p), Key, apoc.map.get(apoc.meta.cypher.types(p), Key, [true])
+````
+
+````
+MATCH (p:Entity {entity_type: "Dataset"})
+WITH distinct p, keys(p) as pKeys
+UNWIND pKeys as Key
+RETURN distinct labels(p), Key, apoc.map.get(apoc.meta.cypher.types(p), Key, [true])
+````
+
 ## Step 7: normalize Activity node properties
 
 **Property keys to be renamed**
@@ -210,6 +234,15 @@ YIELD batches, total, timeTaken, committedOperations, failedOperations
 RETURN batches, total, timeTaken, committedOperations, failedOperations
 ````
 
+Veryfy the new property keys:
+
+````
+MATCH (p:Activity)
+WITH distinct p, keys(p) as pKeys
+UNWIND pKeys as Key
+RETURN distinct labels(p), Key, apoc.map.get(apoc.meta.cypher.types(p), Key, [true])
+````
+
 ## Step 8: normalize Collection node properties
 
 **Property keys to be renamed**
@@ -229,6 +262,15 @@ CALL apoc.periodic.iterate(
 )
 YIELD batches, total, timeTaken, committedOperations, failedOperations
 RETURN batches, total, timeTaken, committedOperations, failedOperations
+````
+
+Veryfy the new property keys:
+
+````
+MATCH (p:Collection)
+WITH distinct p, keys(p) as pKeys
+UNWIND pKeys as Key
+RETURN distinct labels(p), Key, apoc.map.get(apoc.meta.cypher.types(p), Key, [true])
 ````
 
 ## Step 9: delete all Metadata nodes and all HAS_METADATA relationships
