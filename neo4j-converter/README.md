@@ -67,7 +67,7 @@ Questions:
 2. How to handle `ingest_metadata`, `specimen_metadata`? In the https://github.com/hubmapconsortium/search-api/blob/master/src/elasticsearch/neo4j-to-es-attributes.json, they both get mapped to `metadata`. And the original `metadata` is also mapped to `metadata`.
 3. Cypher query `MATCH (n:Entity {entitytype: "Sample"})- [:HAS_METADATA]-> (m:Metadata) RETURN n, m` shows that lots of Entity nodes share the same Metadata, why?
 
-** Property keys to be renamed **
+**Property keys to be renamed**
 
 | Current Property Key            | New Property Key                     |
 |---------------------------------|--------------------------------------|
@@ -82,7 +82,7 @@ Questions:
 | provenance\_user\_displayname   | created\_by\_user\_displayname       |
 | provenance\_user\_email         | created\_by\_user\_email             |
 
-** Property keys to be deleted without renaming **
+**Property keys to be deleted without renaming**
 
 | Property Key                  |
 |-------------------------------|
@@ -158,7 +158,7 @@ RETURN batches, total
 
 ## Step 6: normalize Entity node properties
 
-** Property keys to be renamed **
+**Property keys to be renamed**
 
 | Current Property Key          | New Property Key     |
 |-------------------------------|----------------------|
@@ -188,7 +188,7 @@ RETURN batches, total
 
 ## Step 7: normalize Activity node properties
 
-** Property keys to be renamed **
+**Property keys to be renamed**
 
 | Current Property Key | New Property Key |
 |----------------------|------------------|
@@ -212,7 +212,7 @@ RETURN batches, total
 
 ## Step 8: normalize Collection node properties
 
-** Property keys to be renamed **
+**Property keys to be renamed**
 
 | Current Property Key | New Property Key |
 |----------------------|------------------|
