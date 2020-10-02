@@ -1,11 +1,15 @@
-# Back up the Neo4j database
+# Neo4j Node Properties Migration and Renaming
+
+Standardize the naming of node properties across Neo4j, Elasticsearch, and API services.
+
+## Back up the Neo4j database
 
 Make a backup of the source Neo4j graph database first. There are two options to execute the following steps:
 
 - Option 1: make all the changes against the source database
 - Option 2: import the backup database into another Neo4j server and make the changes. And once all done, replace the source database with the modified database.
 
-# Step 1: drop all indexes
+## Step 1: drop all indexes
 
 There are two types of indexes in Neo4j:
 
@@ -38,7 +42,7 @@ Once all indexes dropped, verify with
 call db.indexes()
 ````
 
-# Step 2: find and delete orphan nodes
+## Step 2: find and delete orphan nodes
 
 ````
 MATCH (n)
@@ -56,14 +60,14 @@ DELETE n
 
 If some of the orphan nodes needs to stay, run a new search and delete using the corresponding labels or filterings.
 
-# Step 3: normalize Metadata node properties
+## Step 3: normalize Metadata node properties
 
 Questions: 
 1. Metadata, Entity, and Activity all have the `provenance_create_timestamp` property, but this property in Metadata and Activity is not getting converted in the https://github.com/hubmapconsortium/search-api/blob/master/src/elasticsearch/neo4j-to-es-attributes.json
 2. How to handle `ingest_metadata`, `specimen_metadata`? In the https://github.com/hubmapconsortium/search-api/blob/master/src/elasticsearch/neo4j-to-es-attributes.json, they both get mapped to `metadata`. And the original `metadata` is also mapped to `metadata`.
 3. Cypher query `MATCH (n:Entity {entitytype: "Sample"})- [:HAS_METADATA]-> (m:Metadata) RETURN n, m` shows that lots of Entity nodes share the same Metadata, why?
 
-## Property keys to be renamed
+** Property keys to be renamed **
 
 | Current Property Key            | New Property Key                     |
 |---------------------------------|--------------------------------------|
@@ -78,7 +82,7 @@ Questions:
 | provenance\_user\_displayname   | created\_by\_user\_displayname       |
 | provenance\_user\_email         | created\_by\_user\_email             |
 
-## Property keys to be deleted without renaming
+** Property keys to be deleted without renaming **
 
 | Property Key                  |
 |-------------------------------|
@@ -126,7 +130,7 @@ YIELD batches, total
 RETURN batches, total
 ````
 
-# Step 4: copy all Metadata node properties to Entity node
+## Step 4: copy all Metadata node properties to Entity node
 
 Since we have lots of nodes, it's advisable to perform the operation in smaller batches. Here is an example of limiting the operation to 1000 at a time.
 
@@ -140,7 +144,7 @@ YIELD batches, total
 RETURN batches, total
 ````
 
-# Step 5: copy all Metadata node properties to Activity node
+## Step 5: copy all Metadata node properties to Activity node
 
 ````
 CALL apoc.periodic.iterate(
@@ -152,9 +156,9 @@ YIELD batches, total
 RETURN batches, total
 ````
 
-# Step 6: normalize Entity node properties
+## Step 6: normalize Entity node properties
 
-## Property keys to be renamed
+** Property keys to be renamed **
 
 | Current Property Key          | New Property Key     |
 |-------------------------------|----------------------|
@@ -182,9 +186,9 @@ YIELD batches, total
 RETURN batches, total
 ````
 
-# Step 7: normalize Activity node properties
+## Step 7: normalize Activity node properties
 
-## Property keys to be renamed
+** Property keys to be renamed **
 
 | Current Property Key | New Property Key |
 |----------------------|------------------|
@@ -206,9 +210,9 @@ YIELD batches, total
 RETURN batches, total
 ````
 
-# Step 8: normalize Collection node properties
+## Step 8: normalize Collection node properties
 
-## Property keys to be renamed
+** Property keys to be renamed **
 
 | Current Property Key | New Property Key |
 |----------------------|------------------|
@@ -227,7 +231,7 @@ YIELD batches, total
 RETURN batches, total
 ````
 
-# Step 9: delete all Metadata nodes and all HAS_METADATA relationships
+## Step 9: delete all Metadata nodes and all HAS_METADATA relationships
 
 This action will delete all the Metadata nodes and any relationship (HAS_METADATA is the only one) going to or from it.
 
@@ -243,15 +247,15 @@ RETURN batches, total
 
 At this point, all the Metadata nodes and any relationship (HAS_METADATA is the only one) going to or from it should have been deleted from the database. The `total` number of deleted Metadata nodes should match the total number returned from Step 1.
 
-# Step 10: Recreate indexes
+## Step 10: Recreate indexes
 
 Based on the search needs, recreate either single-property index or composite index. Best practice is to give the index a name when it is created. More info: https://neo4j.com/docs/cypher-manual/current/administration/indexes-for-search-performance/
 
-# Why do those deleted property keys still appear?
+## Why do those deleted property keys still appear?
 
 After completing the above steps, you may notice that some of the deleted property keys still appear on the left panel of the Neo4j browser even though they are no longer associated with any nodes. This is expected. Unlike labels and relationship types which have underlying meta-data that report the number of objects for each, there is no meta-data for property keys.
 
-# Create new labels based on `entity_type` if desired
+## Create new labels based on `entity_type` if desired
 
 ````
 match (n:Entity {entity_type:"Dataset"})
