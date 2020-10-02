@@ -126,8 +126,8 @@ CALL apoc.periodic.iterate(
         M.provenance_create_timestamp", 
     {batchSize:1000}
 )
-YIELD batches, total 
-RETURN batches, total
+YIELD batches, total, timeTaken, committedOperations, failedOperations
+RETURN batches, total, timeTaken, committedOperations, failedOperations
 ````
 
 ## Step 4: copy all Metadata node properties to Entity node
@@ -140,8 +140,8 @@ CALL apoc.periodic.iterate(
     "SET E += M", 
     {batchSize:1000}
 )
-YIELD batches, total 
-RETURN batches, total
+YIELD batches, total, timeTaken, committedOperations, failedOperations
+RETURN batches, total, timeTaken, committedOperations, failedOperations
 ````
 
 ## Step 5: copy all Metadata node properties to Activity node
@@ -152,8 +152,8 @@ CALL apoc.periodic.iterate(
     "SET A += M", 
     {batchSize:1000}
 )
-YIELD batches, total 
-RETURN batches, total
+YIELD batches, total, timeTaken, committedOperations, failedOperations
+RETURN batches, total, timeTaken, committedOperations, failedOperations
 ````
 
 ## Step 6: normalize Entity node properties
@@ -182,8 +182,8 @@ CALL apoc.periodic.iterate(
         E.provenance_create_timestamp", 
     {batchSize:1000}
 )
-YIELD batches, total 
-RETURN batches, total
+YIELD batches, total, timeTaken, committedOperations, failedOperations
+RETURN batches, total, timeTaken, committedOperations, failedOperations
 ````
 
 ## Step 7: normalize Activity node properties
@@ -206,8 +206,8 @@ CALL apoc.periodic.iterate(
         A.activitytype", 
     {batchSize:1000}
 )
-YIELD batches, total 
-RETURN batches, total
+YIELD batches, total, timeTaken, committedOperations, failedOperations
+RETURN batches, total, timeTaken, committedOperations, failedOperations
 ````
 
 ## Step 8: normalize Collection node properties
@@ -227,8 +227,8 @@ CALL apoc.periodic.iterate(
         C.entitytype", 
     {batchSize:1000}
 )
-YIELD batches, total 
-RETURN batches, total
+YIELD batches, total, timeTaken, committedOperations, failedOperations
+RETURN batches, total, timeTaken, committedOperations, failedOperations
 ````
 
 ## Step 9: delete all Metadata nodes and all HAS_METADATA relationships
@@ -241,8 +241,8 @@ CALL apoc.periodic.iterate(
     "DETACH DELETE M", 
     {batchSize:1000}
 )
-YIELD batches, total 
-RETURN batches, total
+YIELD batches, total, timeTaken, committedOperations, failedOperations
+RETURN batches, total, timeTaken, committedOperations, failedOperations
 ````
 
 At this point, all the Metadata nodes and any relationship (HAS_METADATA is the only one) going to or from it should have been deleted from the database. The `total` number of deleted Metadata nodes should match the total number returned from Step 1.
