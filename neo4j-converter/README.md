@@ -113,7 +113,7 @@ CALL apoc.periodic.iterate(
         M.provenance_user_displayname,
         M.provenance_user_email,
         M.provenance_user_sub,
-        // Remove the flowwing properties directly without copying to Entity/Activity nodes
+        // Remove the flowwing properties directly without renaming
         M.entitytype, 
         M.collection_uuid,
         M.creator_email,
@@ -130,6 +130,32 @@ CALL apoc.periodic.iterate(
         M.user_group_uuid,
         M.uuid, 
         M.provenance_create_timestamp", 
+    {batchSize:1000}
+)
+YIELD batches, total, timeTaken, committedOperations, failedOperations
+RETURN batches, total, timeTaken, committedOperations, failedOperations
+````
+
+## Step 4: normalize Donor node properties
+
+````
+CALL apoc.periodic.iterate(
+    "MATCH (D:Donor) RETURN D", 
+    "SET 
+        // Rename property keys
+        D.hubmap_id = D.display_doi,
+        D.entity_type = D.entitytype,
+        D.submission_id = D.hubmap_identifier,
+        D.doi_suffix_id = D.doi
+    REMOVE 
+        // Remove properties that have been renamed
+        D.display_doi,
+        D.entitytype,
+        D.hubmap_identifier,
+        D.doi,
+        // Remove the fllowing properties directly without renaming
+        D.provenance_create_timestamp,
+        D.provenance_modified_timestamp", 
     {batchSize:1000}
 )
 YIELD batches, total, timeTaken, committedOperations, failedOperations
