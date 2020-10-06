@@ -139,9 +139,9 @@ RETURN batches, total, timeTaken, committedOperations, failedOperations
 
 **Special case**
 
-Lots of the Entity nodes (Sample) have `lab_tissue_id` property. And among those Entity nodes, a few linked Medatadata nodes also have the same property key but with different values. 
+Lots of the Entity nodes (Sample) and Metadata nodes have the same `lab_tissue_id` property key but with different values. 
 
-When this property presents in Metadata node, regardless if it presents in Metadata node or not, keep the property value from Metadata node and rename to a new property key `lab_tissue_sample_id`:
+When this property presents in Metadata node, regardless if it presents in Metadata node or not, copy the property value from Metadata node and add a new property key `lab_tissue_sample_id` in Entity node:
 
 ````
 CALL apoc.periodic.iterate(
@@ -150,7 +150,6 @@ CALL apoc.periodic.iterate(
         E.entitytype = 'Sample' AND M.lab_tissue_id IS NOT NULL 
      RETURN E, M", 
     "SET 
-        // Add a new property key in Entity node with the property value of Metadata node
         E.lab_tissue_sample_id = M.lab_tissue_id
     REMOVE 
         E.lab_tissue_id,
@@ -161,13 +160,13 @@ YIELD batches, total, timeTaken, committedOperations, failedOperations
 RETURN batches, total, timeTaken, committedOperations, failedOperations
 ````
 
-When this property presents in Entity node but not in Metadata node, keep the property value and rename to a new property key `lab_tissue_sample_id`:
+When this property does not present in Metadata node but in Entity node, keep that property value of Entity node and rename the property key to `lab_tissue_sample_id`:
 
 ````
 CALL apoc.periodic.iterate(
     "MATCH (E:Entity)-[:HAS_METADATA]->(M:Metadata) 
      WHERE 
-        E.entitytype = 'Sample' AND E.lab_tissue_id IS NOT NULL AND M.lab_tissue_id IS NULL 
+        E.entitytype = 'Sample' AND M.lab_tissue_id IS NULL AND E.lab_tissue_id IS NOT NULL 
      RETURN E, M", 
     "SET 
         E.lab_tissue_sample_id = E.lab_tissue_id
