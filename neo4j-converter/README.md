@@ -94,6 +94,7 @@ CALL apoc.periodic.iterate(
     REMOVE 
         // Remove properties that have been renamed
         M.label,
+        M.lab_tissue_id,
         M.local_directory_url_path,
         M.message,
         M.metadatas,
@@ -136,6 +137,51 @@ RETURN batches, total, timeTaken, committedOperations, failedOperations
 
 ## Step 4: normalize Entity node properties
 
+**Special case**
+
+Lots of the Entity nodes (Sample) have `lab_tissue_id` property. And among those Entity nodes, a few linked Medatadata nodes also have the same property key but with different values. 
+
+When this property presents in Metadata node, regardless if it presents in Metadata node or not, keep the property value from Metadata node and rename to a new property key `lab_tissue_sample_id`:
+
+````
+CALL apoc.periodic.iterate(
+    "MATCH (E:Entity)-[:HAS_METADATA]->(M:Metadata) 
+     WHERE 
+        E.entitytype = 'Sample' AND M.lab_tissue_id IS NOT NULL 
+     RETURN E, M", 
+    "SET 
+        // Add a new property key in Entity node with the property value of Metadata node
+        E.lab_tissue_sample_id = M.lab_tissue_id
+    REMOVE 
+        E.lab_tissue_id,
+        M.lab_tissue_id", 
+    {batchSize:1000}
+)
+YIELD batches, total, timeTaken, committedOperations, failedOperations
+RETURN batches, total, timeTaken, committedOperations, failedOperations
+````
+
+When this property presents in Entity node but not in Metadata node, keep the property value and rename to a new property key `lab_tissue_sample_id`:
+
+````
+CALL apoc.periodic.iterate(
+    "MATCH (E:Entity)-[:HAS_METADATA]->(M:Metadata) 
+     WHERE 
+        E.entitytype = 'Sample' AND E.lab_tissue_id IS NOT NULL AND M.lab_tissue_id IS NULL 
+     RETURN E, M", 
+    "SET 
+        E.lab_tissue_sample_id = E.lab_tissue_id
+    REMOVE 
+        E.lab_tissue_id,
+        M.lab_tissue_id", 
+    {batchSize:1000}
+)
+YIELD batches, total, timeTaken, committedOperations, failedOperations
+RETURN batches, total, timeTaken, committedOperations, failedOperations
+````
+
+Following is the regular normalization:
+
 ````
 CALL apoc.periodic.iterate(
     "MATCH (E:Entity) RETURN E", 
@@ -154,27 +200,6 @@ CALL apoc.periodic.iterate(
         // Remove the fllowing properties directly without renaming
         E.provenance_create_timestamp,
         E.provenance_modified_timestamp", 
-    {batchSize:1000}
-)
-YIELD batches, total, timeTaken, committedOperations, failedOperations
-RETURN batches, total, timeTaken, committedOperations, failedOperations
-````
-
-## Step 4: normalize Entity node properties
-
-````
-CALL apoc.periodic.iterate(
-    "MATCH (E:Entity) RETURN E", 
-    "SET 
-        // Rename property keys
-        E.entity_type = E.entitytype,
-        E.hubmap_display_id = E.hubmap_identifier,
-        E.create_timestamp = E.provenance_create_timestamp
-    REMOVE 
-        // Remove properties that have been renamed
-        E.entitytype,
-        E.hubmap_identifier,
-        E.provenance_create_timestamp", 
     {batchSize:1000}
 )
 YIELD batches, total, timeTaken, committedOperations, failedOperations
@@ -234,34 +259,7 @@ UNWIND pKeys as Key
 RETURN distinct labels(p), Key, apoc.map.get(apoc.meta.cypher.types(p), Key, [true])
 ````
 
-## Step 6: copy all Metadata node properties to Entity nodes
-
-Since we have lots of nodes, it's advisable to perform the operation in smaller batches. Here is an example of limiting the operation to 1000 at a time.
-
-````
-CALL apoc.periodic.iterate(
-    "MATCH (E:Entity) - [:HAS_METADATA] -> (M:Metadata) RETURN E, M", 
-    "SET E += M", 
-    {batchSize:1000}
-)
-YIELD batches, total, timeTaken, committedOperations, failedOperations
-RETURN batches, total, timeTaken, committedOperations, failedOperations
-````
-
-## Step 7: copy all Metadata node properties to Activity nodes
-
-````
-CALL apoc.periodic.iterate(
-    "MATCH (A:Activity) - [:HAS_METADATA] -> (M:Metadata) RETURN A, M", 
-    "SET A += M", 
-    {batchSize:1000}
-    
-)
-YIELD batches, total, timeTaken, committedOperations, failedOperations
-RETURN batches, total, timeTaken, committedOperations, failedOperations
-````
-
-## Step 8: normalize Collection node properties
+## Step 6: normalize Collection node properties
 
 ````
 CALL apoc.periodic.iterate(
@@ -299,6 +297,33 @@ UNWIND pKeys as Key
 RETURN distinct labels(p), Key, apoc.map.get(apoc.meta.cypher.types(p), Key, [true])
 ````
 
+## Step 7: copy all Metadata node properties to Entity nodes
+
+Since we have lots of nodes, it's advisable to perform the operation in smaller batches. Here is an example of limiting the operation to 1000 at a time.
+
+````
+CALL apoc.periodic.iterate(
+    "MATCH (E:Entity) - [:HAS_METADATA] -> (M:Metadata) RETURN E, M", 
+    "SET E += M", 
+    {batchSize:1000}
+)
+YIELD batches, total, timeTaken, committedOperations, failedOperations
+RETURN batches, total, timeTaken, committedOperations, failedOperations
+````
+
+## Step 8: copy all Metadata node properties to Activity nodes
+
+````
+CALL apoc.periodic.iterate(
+    "MATCH (A:Activity) - [:HAS_METADATA] -> (M:Metadata) RETURN A, M", 
+    "SET A += M", 
+    {batchSize:1000}
+    
+)
+YIELD batches, total, timeTaken, committedOperations, failedOperations
+RETURN batches, total, timeTaken, committedOperations, failedOperations
+````
+
 ## Step 9: delete all Metadata nodes and all HAS_METADATA relationships
 
 This action will delete all the Metadata nodes and any relationship (HAS_METADATA is the only one) going to or from it.
@@ -323,7 +348,7 @@ Based on the search needs, recreate either single-property index or composite in
 
 After completing the above steps, you may notice that some of the deleted property keys still appear on the left panel of the Neo4j browser even though they are no longer associated with any nodes. This is expected. Unlike labels and relationship types which have underlying meta-data that report the number of objects for each, there is no meta-data for property keys.
 
-## Create new labels based on `entity_type` if desired
+## Create new labels based on `entity_type`
 
 ````
 match (n:Entity {entity_type:"Dataset"})
