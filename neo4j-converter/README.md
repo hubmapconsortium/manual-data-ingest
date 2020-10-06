@@ -73,8 +73,6 @@ CALL apoc.periodic.iterate(
     "MATCH (M:Metadata) RETURN M", 
     "SET 
         // Rename property keys
-        M.hubmap_id = M.display_doi,
-        M.doi_suffix_id = M.doi,
         M.dedi_name = M.label,
         M.local_directory_rel_path = M.local_directory_url_path,
         M.pipeline_message = M.message,
@@ -82,7 +80,7 @@ CALL apoc.periodic.iterate(
         M.dataset_name = M.name,
         M.contains_human_genetic_sequences = M.phi,
         M.protocol_url = M.protocol,
-        M.protocol_info =M.protocols,
+        M.protocol_info = M.protocols,
         M.create_timestamp = M.provenance_create_timestamp,
         M.group_uuid = M.provenance_group_uuid,
         M.last_modified_user_displayname = M.provenance_last_updated_user_displayname,
@@ -94,8 +92,6 @@ CALL apoc.periodic.iterate(
         M.created_by_user_sub = M.provenance_user_sub
     REMOVE 
         // Remove properties that have been renamed
-        M.display_doi,
-        M.doi,
         M.label,
         M.local_directory_url_path,
         M.message,
@@ -168,13 +164,12 @@ RETURN batches, total, timeTaken, committedOperations, failedOperations
 CALL apoc.periodic.iterate(
     "MATCH (E:Entity) RETURN E", 
     "SET 
-        // Rename property keys based on 
-        // https://github.com/hubmapconsortium/search-api/blob/master/src/elasticsearch/neo4j-to-es-attributes.json
+        // Rename property keys
         E.entity_type = E.entitytype,
         E.hubmap_display_id = E.hubmap_identifier,
         E.create_timestamp = E.provenance_create_timestamp
     REMOVE 
-        // Remove properties(key/value) that have been renamed
+        // Remove properties that have been renamed
         E.entitytype,
         E.hubmap_identifier,
         E.provenance_create_timestamp", 
@@ -237,7 +232,7 @@ UNWIND pKeys as Key
 RETURN distinct labels(p), Key, apoc.map.get(apoc.meta.cypher.types(p), Key, [true])
 ````
 
-## Step 6: copy all Metadata node properties to Entity node
+## Step 6: copy all Metadata node properties to Entity nodes
 
 Since we have lots of nodes, it's advisable to perform the operation in smaller batches. Here is an example of limiting the operation to 1000 at a time.
 
@@ -251,7 +246,7 @@ YIELD batches, total, timeTaken, committedOperations, failedOperations
 RETURN batches, total, timeTaken, committedOperations, failedOperations
 ````
 
-## Step 7: copy all Metadata node properties to Activity node
+## Step 7: copy all Metadata node properties to Activity nodes
 
 ````
 CALL apoc.periodic.iterate(
