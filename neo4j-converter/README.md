@@ -136,60 +136,33 @@ YIELD batches, total, timeTaken, committedOperations, failedOperations
 RETURN batches, total, timeTaken, committedOperations, failedOperations
 ````
 
-## Step 4: normalize Donor node properties
+## Step 4: normalize Entity node properties
 
 ````
 CALL apoc.periodic.iterate(
-    "MATCH (D:Donor) RETURN D", 
+    "MATCH (E:Entity) RETURN E", 
     "SET 
         // Rename property keys
-        D.hubmap_id = D.display_doi,
-        D.entity_type = D.entitytype,
-        D.submission_id = D.hubmap_identifier,
-        D.doi_suffix_id = D.doi
+        E.hubmap_id = E.display_doi,
+        E.entity_type = E.entitytype,
+        E.submission_id = E.hubmap_identifier,
+        E.doi_suffix_id = E.doi
     REMOVE 
         // Remove properties that have been renamed
-        D.display_doi,
-        D.entitytype,
-        D.hubmap_identifier,
-        D.doi,
+        E.display_doi,
+        E.entitytype,
+        E.hubmap_identifier,
+        E.doi,
         // Remove the fllowing properties directly without renaming
-        D.provenance_create_timestamp,
-        D.provenance_modified_timestamp", 
+        E.provenance_create_timestamp,
+        E.provenance_modified_timestamp", 
     {batchSize:1000}
 )
 YIELD batches, total, timeTaken, committedOperations, failedOperations
 RETURN batches, total, timeTaken, committedOperations, failedOperations
 ````
 
-## Step 4: copy all Metadata node properties to Entity node
-
-Since we have lots of nodes, it's advisable to perform the operation in smaller batches. Here is an example of limiting the operation to 1000 at a time.
-
-````
-CALL apoc.periodic.iterate(
-    "MATCH (E:Entity) - [:HAS_METADATA] -> (M:Metadata) RETURN E, M", 
-    "SET E += M", 
-    {batchSize:1000}
-)
-YIELD batches, total, timeTaken, committedOperations, failedOperations
-RETURN batches, total, timeTaken, committedOperations, failedOperations
-````
-
-## Step 5: copy all Metadata node properties to Activity node
-
-````
-CALL apoc.periodic.iterate(
-    "MATCH (A:Activity) - [:HAS_METADATA] -> (M:Metadata) RETURN A, M", 
-    "SET A += M", 
-    {batchSize:1000}
-    
-)
-YIELD batches, total, timeTaken, committedOperations, failedOperations
-RETURN batches, total, timeTaken, committedOperations, failedOperations
-````
-
-## Step 6: normalize Entity node properties
+## Step 4: normalize Entity node properties
 
 ````
 CALL apoc.periodic.iterate(
@@ -234,18 +207,21 @@ UNWIND pKeys as Key
 RETURN distinct labels(p), Key, apoc.map.get(apoc.meta.cypher.types(p), Key, [true])
 ````
 
-## Step 7: normalize Activity node properties
+## Step 5: normalize Activity node properties
 
 ````
 CALL apoc.periodic.iterate(
     "MATCH (A:Activity) RETURN A", 
     "SET 
-        // Rename property keys based on 
-        // https://github.com/hubmapconsortium/search-api/blob/master/src/elasticsearch/neo4j-to-es-attributes.json
-        A.creation_action = A.activitytype
+        // Rename property keys
+        A.hubmap_id = A.display_doi,
+        A.creation_action = A.activitytype,
+        A.doi_suffix_id = A.doi
     REMOVE 
-        // Remove properties(key/value) that have been renamed
-        A.activitytype", 
+        // Remove properties that have been renamed
+        A.display_doi,
+        A.activitytype,
+        A.doi", 
     {batchSize:1000}
 )
 YIELD batches, total, timeTaken, committedOperations, failedOperations
@@ -259,6 +235,33 @@ MATCH (p:Activity)
 WITH distinct p, keys(p) as pKeys
 UNWIND pKeys as Key
 RETURN distinct labels(p), Key, apoc.map.get(apoc.meta.cypher.types(p), Key, [true])
+````
+
+## Step 6: copy all Metadata node properties to Entity node
+
+Since we have lots of nodes, it's advisable to perform the operation in smaller batches. Here is an example of limiting the operation to 1000 at a time.
+
+````
+CALL apoc.periodic.iterate(
+    "MATCH (E:Entity) - [:HAS_METADATA] -> (M:Metadata) RETURN E, M", 
+    "SET E += M", 
+    {batchSize:1000}
+)
+YIELD batches, total, timeTaken, committedOperations, failedOperations
+RETURN batches, total, timeTaken, committedOperations, failedOperations
+````
+
+## Step 7: copy all Metadata node properties to Activity node
+
+````
+CALL apoc.periodic.iterate(
+    "MATCH (A:Activity) - [:HAS_METADATA] -> (M:Metadata) RETURN A, M", 
+    "SET A += M", 
+    {batchSize:1000}
+    
+)
+YIELD batches, total, timeTaken, committedOperations, failedOperations
+RETURN batches, total, timeTaken, committedOperations, failedOperations
 ````
 
 ## Step 8: normalize Collection node properties
