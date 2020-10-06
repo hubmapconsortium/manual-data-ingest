@@ -241,9 +241,23 @@ RETURN distinct labels(p), Key, apoc.map.get(apoc.meta.cypher.types(p), Key, [tr
 CALL apoc.periodic.iterate(
     "MATCH (C:Collection) RETURN C", 
     "SET 
-        C.entity_type = C.entitytype
+        C.hubmap_id = C.display_doi,
+        C.entity_type = C.entitytype,
+        C.title = C.label,
+        C.doi_suffix_id = C.doi,
+        C.create_timestamp = C.provenance_create_timestamp,
+        C.created_by_user_email = C.provenance_user_email,
+        C.created_by_user_displayname = C.provenance_user_displayname,
+        C.last_modified_timestamp = C.provenance_modified_timestamp
     REMOVE 
-        C.entitytype", 
+        C.display_doi,
+        C.entitytype,
+        C.label,
+        C.doi,
+        C.provenance_create_timestamp,
+        C.provenance_user_email,
+        C.provenance_user_displayname,
+        C.provenance_modified_timestamp", 
     {batchSize:1000}
 )
 YIELD batches, total, timeTaken, committedOperations, failedOperations
