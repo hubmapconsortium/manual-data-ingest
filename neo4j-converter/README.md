@@ -50,15 +50,21 @@ WHERE NOT (n)--()
 RETURN n
 ````
 
+It is okay to delete the orphaned Metadata and Collection nodes. But do not delete the orphaned Entity nodes as these are Lab nodes which haven't been used yet (but will be soon).
+
 If all the resulting orphan nodes can be deleted, do it with:
 
 ````
-MATCH (n)
+MATCH (n:Metadata)
 WHERE NOT (n)--()
 DELETE n
 ````
 
-If some of the orphan nodes needs to stay, run a new search and delete using the corresponding labels or filterings.
+````
+MATCH (n:Collection)
+WHERE NOT (n)--()
+DELETE n
+````
 
 ## Step 3: normalize Metadata node properties
 
@@ -84,44 +90,83 @@ Questions:
 
 **Property keys to be deleted without renaming**
 
-| Property Key                  |
-|-------------------------------|
-| entitytype                    |
-| reference\_uuid               |
-| uuid                          |
-| provenance\_create\_timestamp |
+| Property Key                 |
+|------------------------------|
+| entitytype                   |
+| creator\_email               |
+| creator\_name                |
+| dataset\_collection\_uuid    |
+| globus\_directory\_url\_path |
+| group\_name                  |
+| group\_uuid                  |
+| is\_protected                |
+| metadata\_file               |
+| reference\_uuid              |
+| source\_uuid                 |
+| source\_uuids                |
+| user\_group\_uuid            |
+| uuid                         |
 
 ````
 CALL apoc.periodic.iterate(
     "MATCH (M:Metadata) RETURN M", 
     "SET 
-        // Rename property keys based on 
-        // https://github.com/hubmapconsortium/search-api/blob/master/src/elasticsearch/neo4j-to-es-attributes.json
-        M.lab_tissue_sample_id = M.lab_tissue_id,
-        M.portal_uploaded_image_files = M.image_file_metadata,
-        M.lab_name = M.label,
+        // Rename property keys
+        M.hubmap_id = M.display_doi,
+        M.doi_suffix_id = M.doi,
+        M.dedi_name = M.label,
+        M.local_directory_rel_path = M.local_directory_url_path,
+        M.pipeline_message = M.message,
         M.portal_metadata_upload_files = M.metadatas,
+        M.dataset_name = M.name,
         M.contains_human_genetic_sequences = M.phi,
         M.protocol_url = M.protocol,
+        M.protocol_info =M.protocols,
+        M.create_timestamp = M.provenance_create_timestamp,
         M.group_uuid = M.provenance_group_uuid,
+        M.last_modified_user_displayname = M.provenance_last_updated_user_displayname,
+        M.last_modified_user_email = M.provenance_last_updated_user_email,
+        M.last_modified_user_sub = M.provenance_last_updated_user_sub,
         M.last_modified_timestamp = M.provenance_modified_timestamp,
         M.created_by_user_displayname = M.provenance_user_displayname,
-        M.created_by_user_email = M.provenance_user_email
+        M.created_by_user_email = M.provenance_user_email,
+        M.created_by_user_sub = M.provenance_user_sub
     REMOVE 
-        // Remove properties key/value that have been renamed
-        M.lab_tissue_id,
-        M.image_file_metadata,
+        // Remove properties that have been renamed
+        M.display_doi,
+        M.doi,
         M.label,
+        M.local_directory_url_path,
+        M.message,
         M.metadatas,
+        M.name,
         M.phi,
         M.protocol,
+        M.protocols,
+        M.provenance_create_timestamp,
         M.provenance_group_uuid,
+        M.provenance_last_updated_user_displayname,
+        M.provenance_last_updated_user_email,
+        M.provenance_last_updated_user_sub,
         M.provenance_modified_timestamp,
         M.provenance_user_displayname,
         M.provenance_user_email,
-        // Remove the flowwing properties key/value directly without copying to Entity/Activity nodes
+        M.provenance_user_sub,
+        // Remove the flowwing properties directly without copying to Entity/Activity nodes
         M.entitytype, 
+        M.collection_uuid,
+        M.creator_email,
+        M.creator_name,
+        M.dataset_collection_uuid,
+        M.globus_directory_url_path,
+        M.group_name,
+        M.group_uuid,
+        M.is_protected,
+        M.metadata_file,
         M.reference_uuid,
+        M.source_uuid,
+        M.source_uuids,
+        M.user_group_uuid,
         M.uuid, 
         M.provenance_create_timestamp", 
     {batchSize:1000}
