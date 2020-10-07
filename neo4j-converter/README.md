@@ -339,15 +339,7 @@ RETURN batches, total, timeTaken, committedOperations, failedOperations
 
 At this point, all the Metadata nodes and any relationship (HAS_METADATA is the only one) going to or from it should have been deleted from the database. The `total` number of deleted Metadata nodes should match the total number returned from Step 1.
 
-## Step 10: Recreate indexes
-
-Based on the search needs, recreate either single-property index or composite index. Best practice is to give the index a name when it is created. More info: https://neo4j.com/docs/cypher-manual/current/administration/indexes-for-search-performance/
-
-## Why do those deleted property keys still appear?
-
-After completing the above steps, you may notice that some of the deleted property keys still appear on the left panel of the Neo4j browser even though they are no longer associated with any nodes. This is expected. Unlike labels and relationship types which have underlying meta-data that report the number of objects for each, there is no meta-data for property keys.
-
-## Create new labels based on `entity_type`
+## Step 10: create new labels
 
 ````
 match (n:Entity {entity_type:"Dataset"})
@@ -366,3 +358,11 @@ match (n:Entity {entity_type:"Donor"})
 set n :Donor
 return n
 ````
+
+## Step 11: Create new indexes
+
+Based on the search needs, create either single-property index or composite index on a given label. Best practice is to give the index a name when it is created. More info: https://neo4j.com/docs/cypher-manual/current/administration/indexes-for-search-performance/
+
+## Why do those deleted property keys still appear?
+
+After completing the above steps, you may notice that some of the deleted property keys still appear on the left panel of the Neo4j browser even though they are no longer associated with any nodes. This is expected. Unlike labels and relationship types which have underlying meta-data that report the number of objects for each, there is no meta-data for property keys.
