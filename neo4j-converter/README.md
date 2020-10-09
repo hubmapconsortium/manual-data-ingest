@@ -75,7 +75,6 @@ CALL apoc.periodic.iterate(
     "MATCH (M:Metadata) RETURN M", 
     "SET 
         // Rename property keys
-        M.deid_name = M.label,
         M.local_directory_rel_path = M.local_directory_url_path,
         M.pipeline_message = M.message,
         M.portal_metadata_upload_files = M.metadatas,
@@ -95,7 +94,6 @@ CALL apoc.periodic.iterate(
         M.created_by_user_sub = M.provenance_user_sub
     REMOVE 
         // Remove properties that have been renamed
-        M.lab_tissue_id,
         M.local_directory_url_path,
         M.message,
         M.metadatas,
