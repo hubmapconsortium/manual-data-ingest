@@ -68,6 +68,8 @@ DELETE n
 
 ## Step 3: normalize Metadata node properties
 
+Note: Either some Entity or Metadata nodes have this same property. I don't find any linked Entity and Metadata nodes share this same property though. Once everything is controlled via a schema this will be easier to handle.
+
 ````
 CALL apoc.periodic.iterate(
     "MATCH (M:Metadata) RETURN M", 
@@ -93,7 +95,6 @@ CALL apoc.periodic.iterate(
         M.created_by_user_sub = M.provenance_user_sub
     REMOVE 
         // Remove properties that have been renamed
-        M.label,
         M.lab_tissue_id,
         M.local_directory_url_path,
         M.message,
