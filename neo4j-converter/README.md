@@ -73,7 +73,7 @@ CALL apoc.periodic.iterate(
     "MATCH (M:Metadata) RETURN M", 
     "SET 
         // Rename property keys
-        M.dedi_name = M.label,
+        M.deid_name = M.label,
         M.local_directory_rel_path = M.local_directory_url_path,
         M.pipeline_message = M.message,
         M.portal_metadata_upload_files = M.metadatas,
