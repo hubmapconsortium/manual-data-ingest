@@ -82,7 +82,7 @@ CALL apoc.periodic.iterate(
         M.contains_human_genetic_sequences = M.phi,
         M.protocol_url = M.protocol,
         M.protocol_info = M.protocols,
-        M.create_timestamp = M.provenance_create_timestamp,
+        M.created_timestamp = M.provenance_create_timestamp,
         M.group_name = M.provenance_group_name,
         M.group_uuid = M.provenance_group_uuid,
         M.last_modified_user_displayname = M.provenance_last_updated_user_displayname,
@@ -267,7 +267,7 @@ CALL apoc.periodic.iterate(
         C.entity_type = C.entitytype,
         C.title = C.label,
         C.doi_suffix_id = C.doi,
-        C.create_timestamp = C.provenance_create_timestamp,
+        C.created_timestamp = C.provenance_create_timestamp,
         C.created_by_user_email = C.provenance_user_email,
         C.created_by_user_displayname = C.provenance_user_displayname,
         C.last_modified_timestamp = C.provenance_modified_timestamp
