@@ -340,18 +340,28 @@ At this point, all the Metadata nodes and any relationship (HAS_METADATA is the 
 
 ## Step 10: create new labels
 
+Add a second label "Entity" to ALL the Collection nodes:
+````
+match (n:Collection {entity_type:"Collection"})
+set n :Entity
+return n
+````
+
+Add a second label "Dataset" to the Entity nodes that are datasets:
 ````
 match (n:Entity {entity_type:"Dataset"})
 set n :Dataset
 return n
 ````
 
+Add a second label "Sample" to the Entity nodes that are samples:
 ````
 match (n:Entity {entity_type:"Sample"})
 set n :Sample
 return n
 ````
 
+Add a second label "Donor" to the Entity nodes that are donors:
 ````
 match (n:Entity {entity_type:"Donor"})
 set n :Donor
