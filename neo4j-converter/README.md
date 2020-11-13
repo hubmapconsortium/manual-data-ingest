@@ -186,7 +186,7 @@ CALL apoc.periodic.iterate(
     "SET 
         // Rename property keys
         E.hubmap_id = E.display_doi,
-        E.entity_type = E.entitytype,
+        E.entity_class = E.entitytype,
         E.submission_id = E.hubmap_identifier,
         E.doi_suffix_id = E.doi
     REMOVE 
@@ -204,24 +204,24 @@ YIELD batches, total, timeTaken, committedOperations, failedOperations
 RETURN batches, total, timeTaken, committedOperations, failedOperations
 ````
 
-Veryfy the new property keys by `entity_type`:
+Veryfy the new property keys by `entity_class`:
 
 ````
-MATCH (p:Entity {entity_type: "Donor"})
+MATCH (p:Entity {entity_class: "Donor"})
 WITH distinct p, keys(p) as pKeys
 UNWIND pKeys as Key
 RETURN distinct labels(p), Key, apoc.map.get(apoc.meta.cypher.types(p), Key, [true])
 ````
 
 ````
-MATCH (p:Entity {entity_type: "Sample"})
+MATCH (p:Entity {entity_class: "Sample"})
 WITH distinct p, keys(p) as pKeys
 UNWIND pKeys as Key
 RETURN distinct labels(p), Key, apoc.map.get(apoc.meta.cypher.types(p), Key, [true])
 ````
 
 ````
-MATCH (p:Entity {entity_type: "Dataset"})
+MATCH (p:Entity {entity_class: "Dataset"})
 WITH distinct p, keys(p) as pKeys
 UNWIND pKeys as Key
 RETURN distinct labels(p), Key, apoc.map.get(apoc.meta.cypher.types(p), Key, [true])
@@ -264,7 +264,7 @@ CALL apoc.periodic.iterate(
     "MATCH (C:Collection) RETURN C", 
     "SET 
         C.hubmap_id = C.display_doi,
-        C.entity_type = C.entitytype,
+        C.entity_class = C.entitytype,
         C.title = C.label,
         C.doi_suffix_id = C.doi,
         C.created_timestamp = C.provenance_create_timestamp,
@@ -342,28 +342,28 @@ At this point, all the Metadata nodes and any relationship (HAS_METADATA is the 
 
 Add a second label "Entity" to ALL the Collection nodes:
 ````
-match (n:Collection {entity_type:"Collection"})
+match (n:Collection {entity_class:"Collection"})
 set n :Entity
 return n
 ````
 
 Add a second label "Dataset" to the Entity nodes that are datasets:
 ````
-match (n:Entity {entity_type:"Dataset"})
+match (n:Entity {entity_class:"Dataset"})
 set n :Dataset
 return n
 ````
 
 Add a second label "Sample" to the Entity nodes that are samples:
 ````
-match (n:Entity {entity_type:"Sample"})
+match (n:Entity {entity_class:"Sample"})
 set n :Sample
 return n
 ````
 
 Add a second label "Donor" to the Entity nodes that are donors:
 ````
-match (n:Entity {entity_type:"Donor"})
+match (n:Entity {entity_class:"Donor"})
 set n :Donor
 return n
 ````
