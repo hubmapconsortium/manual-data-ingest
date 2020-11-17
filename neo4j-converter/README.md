@@ -118,8 +118,6 @@ CALL apoc.periodic.iterate(
         M.creator_name,
         M.dataset_collection_uuid,
         M.globus_directory_url_path,
-        M.group_name,
-        M.group_uuid,
         M.is_protected,
         M.metadata_file,
         M.reference_uuid,
