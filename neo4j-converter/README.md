@@ -138,7 +138,7 @@ Next we'll need to change the property values for the newly renamed `contains_hu
 MATCH (M:Metadata) 
 WHERE M.contains_human_genetic_sequences is not NULL 
 CALL apoc.refactor.normalizeAsBoolean(M, 'contains_human_genetic_sequences', ['yes'], ['no'])
-RETURN M, count(M)
+RETURN count(M)
 ````
 
 ## Step 4: normalize Entity node properties
