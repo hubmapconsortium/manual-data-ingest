@@ -132,6 +132,15 @@ YIELD batches, total, timeTaken, committedOperations, failedOperations
 RETURN batches, total, timeTaken, committedOperations, failedOperations
 ````
 
+Next we'll need to change the property values for the newly renamed `contains_human_genetic_sequences` to be boolean instead of "yes" or "no".
+
+````
+MATCH (M:Metadata) 
+WHERE M.contains_human_genetic_sequences is not NULL 
+CALL apoc.refactor.normalizeAsBoolean(M, 'contains_human_genetic_sequences', ['yes'], ['no'])
+RETURN M, count(M)
+````
+
 ## Step 4: normalize Entity node properties
 
 **Special case**
