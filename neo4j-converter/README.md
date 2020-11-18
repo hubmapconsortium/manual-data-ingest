@@ -345,6 +345,13 @@ set n :Entity
 return n
 ````
 
+Add a second label "Lab" to the Entity nodes that are labs:
+````
+match (n:Entity {entity_class:"Lab"})
+set n :Lab
+return n
+````
+
 Add a second label "Dataset" to the Entity nodes that are datasets:
 ````
 match (n:Entity {entity_class:"Dataset"})
