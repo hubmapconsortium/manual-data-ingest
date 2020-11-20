@@ -78,7 +78,8 @@ CALL apoc.periodic.iterate(
         M.local_directory_rel_path = M.local_directory_url_path,
         M.pipeline_message = M.message,
         M.portal_metadata_upload_files = M.metadatas,
-        M.dataset_name = M.name,
+        # Was dataset_name, renamed to title
+        M.title = M.name,
         M.contains_human_genetic_sequences = M.phi,
         M.protocol_url = M.protocol,
         M.protocol_info = M.protocols,
