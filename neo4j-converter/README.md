@@ -148,7 +148,7 @@ RETURN count(M)
 
 Lots of the Entity nodes (Sample) and Metadata nodes have the same `lab_tissue_id` property key but with different values. 
 
-When this property presents in Metadata node, regardless if it presents in Metadata node or not, copy the property value from Metadata node and add a new property key `lab_tissue_sample_id` in Entity node:
+When this property presents in Metadata node, regardless if it presents in Entity node or not, copy the property value from Metadata node and add a new property key `lab_tissue_sample_id` in Entity node:
 
 ````
 CALL apoc.periodic.iterate(
@@ -383,7 +383,27 @@ set n :Donor
 return n
 ````
 
-## Step 11: Create new indexes
+## Step 11: Set `data_access_level` for Donor and Sample
+
+First, set to "consortium" by default:
+
+````
+MATCH (e:Entity)
+WHERE e.entity_type IN ['Donor', 'Sample']
+SET e.data_access_level='consortium'
+RETURN COUNT(e)
+````
+
+Then update to "public" if any Dataset below the Donor/Sample in the provenance hierarchy is public:
+
+````
+MATCH (e:Entity)-[r:ACTIVITY_INPUT|:ACTIVITY_OUTPUT*]->(d:Dataset) 
+WHERE e.entity_type IN ['Donor', 'Sample'] AND d.data_access_level='public'
+SET e.data_access_level='public'
+RETURN COUNT(e)
+````
+
+## Step 12: Create new indexes
 
 Based on the search needs, create either single-property index or composite index on a given label. Best practice is to give the index a name when it is created. More info: https://neo4j.com/docs/cypher-manual/current/administration/indexes-for-search-performance/
 
