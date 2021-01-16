@@ -196,14 +196,16 @@ CALL apoc.periodic.iterate(
         E.hubmap_id = E.display_doi,
         E.entity_type = E.entitytype,
         E.submission_id = E.hubmap_identifier,
-        E.doi_suffix_id = E.doi
+        E.doi_suffix_id = E.doi,
+        // Lab has timestamps
+        E.created_timestamp = E.provenance_create_timestamp,
+        E.last_modified_timestamp = E.provenance_modified_timestamp
     REMOVE 
         // Remove properties that have been renamed
         E.display_doi,
         E.entitytype,
         E.hubmap_identifier,
         E.doi,
-        // Remove the fllowing properties directly without renaming
         E.provenance_create_timestamp,
         E.provenance_modified_timestamp", 
     {batchSize:1000}
