@@ -324,7 +324,11 @@ RETURN batches, total, timeTaken, committedOperations, failedOperations
 ````
 CALL apoc.periodic.iterate(
     "MATCH (A:Activity) - [:HAS_METADATA] -> (M:Metadata) RETURN A, M", 
-    "SET A += M", 
+    "SET 
+        A += M
+    REMOVE
+        // Activity doesn't need this
+        A.last_modified_timestamp", 
     {batchSize:1000}
     
 )
