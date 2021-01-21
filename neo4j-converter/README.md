@@ -389,9 +389,9 @@ set n :Donor
 return n
 ````
 
-## Step 11: Set `data_access_level` for Donor and Sample
+## Step 11: Set default `data_access_level` value for Donor and Sample
 
-First, set to "consortium" by default:
+Set to "consortium" by default:
 
 ````
 MATCH (e:Entity)
@@ -400,14 +400,6 @@ SET e.data_access_level='consortium'
 RETURN COUNT(e)
 ````
 
-Then update to "public" if any Dataset below the Donor/Sample in the provenance hierarchy is public:
-
-````
-MATCH (e:Entity)-[r:ACTIVITY_INPUT|:ACTIVITY_OUTPUT*]->(d:Dataset) 
-WHERE e.entity_type IN ['Donor', 'Sample'] AND d.data_access_level='public'
-SET e.data_access_level='public'
-RETURN COUNT(e)
-````
 
 ## Step 12: Create new indexes
 
