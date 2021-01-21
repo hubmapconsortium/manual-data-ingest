@@ -389,32 +389,21 @@ set n :Donor
 return n
 ````
 
-## Step 12: Set correct `data_access_level` value for Donor and Sample
+## Step 11: Set missing `data_access_level` for Donor and Sample
 
-Set to "consortium" for all Donor and Sample nodes by default:
-
-````
-MATCH (e:Entity)
-WHERE e.entity_type IN ['Donor', 'Sample']
-SET e.data_access_level='consortium'
-RETURN COUNT(e)
-````
-
-Then update to "public" if any dataset below the Donor or Sample in the provenance hierarchy is published:
+Set to "consortium" for Donor and Sample nodes that don't have the `data_access_level` property. 
 
 ````
 CALL apoc.periodic.iterate(
-    "MATCH (d:Dataset) WHERE d.status='Published' RETURN d", 
-    "MATCH (e:Entity)-[r:ACTIVITY_INPUT|:ACTIVITY_OUTPUT*]->(d) 	
-     WHERE e.entity_type IN ['Donor', 'Sample']
-     SET e.data_access_level='public'", 
-    {batchSize:100}
+    "MATCH (e:Entity) WHERE e.entity_type IN ['Donor', 'Sample'] AND e.data_access_level is NULL RETURN e", 
+    "SET e.data_access_level='consortium'", 
+    {batchSize:1000}
 )
 YIELD batches, total, timeTaken, committedOperations, failedOperations
 RETURN batches, total, timeTaken, committedOperations, failedOperations
 ````
 
-## Step 13: Create new indexes
+## Step 12: Create new indexes
 
 Based on the search needs, create either single-property index or composite index on a given label. Best practice is to give the index a name when it is created. More info: https://neo4j.com/docs/cypher-manual/current/administration/indexes-for-search-performance/
 
